@@ -56,25 +56,65 @@ struct rb_node *rb_min(const struct rb_node *x);
 struct rb_node *rb_next(const struct rb_node *x);
 struct rb_node *rb_prev(const struct rb_node *x);
 
+static inline struct rb_node *rb_next_safe(const struct rb_node *n,
+                                           const struct rb_root *tree)
+{
+    return (n == rb_end(tree)) ? NULL : rb_next(n);
+}
+
 #define rb_for_each(pos, tree)                                                 \
     for ((pos) = rb_first((tree)); (pos) != rb_end((tree));                    \
          (pos) = rb_next((pos)))
+
+#define rb_for_each_safe(pos, n, tree)                                         \
+    for ((pos) = rb_first((tree)), (n) = rb_next_safe((pos), (tree));          \
+         (pos) != rb_end((tree));                                              \
+         (pos) = (n), (n) = rb_next_safe((pos), (tree)))
 
 #define rb_for_each_init(pos, tree)                                            \
     for (struct rb_node *pos = rb_first((tree)); pos != rb_end((tree));        \
          pos = rb_next((pos)))
 
+#define rb_for_each_safe_init(pos, tree)                                       \
+    for (struct rb_node *pos = rb_first((tree)),                               \
+                        *_rb_next = rb_next_safe((pos), (tree));               \
+         pos != rb_end((tree));                                                \
+         (pos) = _rb_next, _rb_next = rb_next_safe((pos), (tree)))
+
 #define rb_entry(ptr, type, member) container_of(ptr, type, member)
 
+#define rb_first_entry(tree, type, member)                                     \
+    rb_entry(rb_first((tree)), type, member)
+
+#define rb_last_entry(tree, type, member)                                      \
+    rb_entry(rb_last((tree)), type, member)
+
+#define rb_next_entry(pos, member)                                             \
+    rb_entry(rb_next(&(pos)->member), typeof(*pos), member)
+
+#define rb_next_entry_safe(pos, tree, member)                                  \
+    rb_entry(rb_next_safe(&(pos)->member, (tree)), typeof(*pos), member)
+
 #define rb_for_each_entry(pos, tree, member)                                   \
-    for ((pos) = rb_entry(rb_first((tree)), typeof(*pos), member);             \
+    for ((pos) = rb_first_entry((tree), typeof(*pos), member);                 \
          &(pos)->member != rb_end((tree));                                     \
-         (pos) = rb_entry(rb_next(&(pos)->member), typeof(*(pos)), member))
+         (pos) = rb_next_entry((pos), member))
+
+#define rb_for_each_entry_safe(pos, n, tree, member)                           \
+    for ((pos) = rb_first_entry((tree), typeof(*pos), member),                 \
+        (n) = rb_next_entry_safe((pos), (tree), member);                       \
+         &(pos)->member != rb_end((tree));                                     \
+         (pos) = (n), (n) = rb_next_entry_safe((pos), (tree), member))
 
 #define rb_for_each_entry_init(type, pos, tree, member)                        \
-    for (type *pos = rb_entry(rb_first((tree)), type, member);                 \
+    for (type *pos = rb_first_entry((tree), type, member);                     \
+         &pos->member != rb_end((tree)); pos = rb_next_entry(pos, member))
+
+#define rb_for_each_entry_safe_init(type, pos, tree, member)                   \
+    for (type *pos = rb_first_entry((tree), type, member),                     \
+              *_rb_next = rb_next_entry_safe(pos, (tree), member);             \
          &pos->member != rb_end((tree));                                       \
-         pos = rb_entry(rb_next(&pos->member), type, member))
+         pos = _rb_next, _rb_next = rb_next_entry_safe(pos, (tree), member))
 
 void rb_balance_insert(struct rb_node *x, struct rb_root *root);
 
@@ -120,7 +160,7 @@ static inline struct rb_node *rb_find(const void *key, struct rb_root *root,
 
 static inline struct rb_node *
 rb_find_or_insert(const void *key, struct rb_root *root, struct rb_node *node,
-                  bool (*comp)(const void *, const struct rb_node *))
+                  int (*comp)(const void *, const struct rb_node *))
 {
     struct rb_node *parent = rb_end(root);
     struct rb_node **link = &root->rb_node;
