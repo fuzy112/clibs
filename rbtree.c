@@ -426,3 +426,24 @@ void rb_remove(struct rb_node *x, struct rb_root *root)
         }
     }
 }
+
+
+void rb_replace_node(struct rb_node *old, struct rb_node *new_node)
+{
+    new_node->rb_parent = old->rb_parent;
+    new_node->rb_left = old->rb_left;
+    new_node->rb_right = old->rb_right;
+    new_node->rb_is_black = old->rb_is_black;
+    if (rb_is_left_child_of_parent(old))
+        old->rb_parent->rb_left = new_node;
+    else
+        old->rb_parent->rb_right = new_node;
+    if (old->rb_left)
+        old->rb_left->rb_parent = new_node;
+    if (old->rb_right)
+        old->rb_right->rb_parent = new_node;
+    old->rb_parent = NULL;
+    old->rb_left = NULL;
+    old->rb_right = NULL;
+    old->rb_is_black = NULL;
+}
