@@ -55,6 +55,11 @@ struct rb_node *rb_min(const struct rb_node *x);
 struct rb_node *rb_next(const struct rb_node *x);
 struct rb_node *rb_prev(const struct rb_node *x);
 
+static inline bool rb_empty(const struct rb_root *tree)
+{
+    return tree->rb_node == NULL;
+}
+
 static inline struct rb_node *rb_next_safe(const struct rb_node *n,
                                            const struct rb_root *tree)
 {
@@ -82,6 +87,10 @@ static inline struct rb_node *rb_next_safe(const struct rb_node *n,
 
 #define rb_entry(ptr, type, member) container_of(ptr, type, member)
 
+#define rb_entry_safe(ptr, type, member)                                       \
+    ({ typeof(ptr) _rb_ptr = ptr;                                              \
+      _rb_ptr ? rb_entry(_rb_ptr, type, member) : NULL; })
+
 #define rb_first_entry(tree, type, member)                                     \
     rb_entry(rb_first((tree)), type, member)
 
@@ -92,7 +101,7 @@ static inline struct rb_node *rb_next_safe(const struct rb_node *n,
     rb_entry(rb_next(&(pos)->member), typeof(*pos), member)
 
 #define rb_next_entry_safe(pos, tree, member)                                  \
-    rb_entry(rb_next_safe(&(pos)->member, (tree)), typeof(*pos), member)
+    rb_entry_safe(rb_next_safe(&(pos)->member, (tree)), typeof(*pos), member)
 
 #define rb_for_each_entry(pos, tree, member)                                   \
     for ((pos) = rb_first_entry((tree), typeof(*pos), member);                 \
@@ -118,6 +127,8 @@ static inline struct rb_node *rb_next_safe(const struct rb_node *n,
 void rb_balance_insert(struct rb_node *x, struct rb_root *root);
 
 void rb_remove(struct rb_node *x, struct rb_root *root);
+
+void rb_replace_node(struct rb_node *old, struct rb_node *new_node);
 
 static inline void rb_add(struct rb_node *x, struct rb_root *root,
                           bool (*less)(const struct rb_node *,
