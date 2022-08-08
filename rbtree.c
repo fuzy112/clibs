@@ -143,8 +143,7 @@ void rb_link_node(struct rb_node *x, struct rb_node *parent,
     assert(&parent->rb_left == link || &parent->rb_right == link);
     *link = x;
     x->rb_parent = parent;
-    x->rb_link[0] = NULL;
-    x->rb_link[1] = NULL;
+    x->rb_left = x->rb_right = NULL;
     x->rb_is_black = false;
 }
 

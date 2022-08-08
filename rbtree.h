@@ -29,17 +29,16 @@
     ((type *)((char *)ptr - offsetof(type, member)))
 #endif
 
-struct rb_node {
-    struct rb_node *rb_link[2];
-    struct rb_node *rb_parent;
-    bool rb_is_black;
-};
-
-#define rb_left rb_link[0]
-#define rb_right rb_link[1]
-
 struct rb_root {
     struct rb_node *rb_node;
+};
+
+struct rb_node {
+    struct rb_root _rb_left_or_root;
+#define rb_left _rb_left_or_root.rb_node
+    struct rb_node *rb_right;
+    struct rb_node *rb_parent;
+    bool rb_is_black;
 };
 
 #define RB_ROOT_INIT                                                           \
