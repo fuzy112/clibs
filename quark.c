@@ -60,7 +60,7 @@ static struct quark_entry *alloc_entry(const char *str)
     return entry;
 }
 
-struct quark_entry *insert_or_find_entry(const char *str)
+static struct quark_entry *insert_or_find_entry(const char *str)
 {
     struct rb_node *parent = rb_end(&str_root);
     struct rb_node **link = &str_root.rb_node;
