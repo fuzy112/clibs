@@ -24,18 +24,21 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef container_of
 #define container_of(ptr, type, member)                                        \
     ((type *)((char *)ptr - offsetof(type, member)))
 #endif
 
-struct rb_root {
+struct __attribute__((may_alias)) rb_root {
     struct rb_node *rb_node;
 };
 
 struct rb_node {
-    struct rb_root _rb_left_or_root;
-#define rb_left _rb_left_or_root.rb_node
+    struct rb_node *rb_left;
     struct rb_node *rb_right;
     struct rb_node *rb_parent;
     bool rb_is_black;
@@ -75,15 +78,6 @@ static inline struct rb_node *rb_next_safe(const struct rb_node *n,
          (pos) != rb_end((tree));                                              \
          (pos) = (n), (n) = rb_next_safe((pos), (tree)))
 
-#define rb_for_each_init(pos, tree)                                            \
-    for (struct rb_node *pos = rb_first((tree)); pos != rb_end((tree));        \
-         pos = rb_next((pos)))
-
-#define rb_for_each_safe_init(pos, tree)                                       \
-    for (struct rb_node *pos = rb_first((tree)),                               \
-                        *_rb_next = rb_next_safe((pos), (tree));               \
-         pos != rb_end((tree));                                                \
-         (pos) = _rb_next, _rb_next = rb_next_safe((pos), (tree)))
 
 #define rb_entry(ptr, type, member) container_of(ptr, type, member)
 
@@ -114,6 +108,18 @@ static inline struct rb_node *rb_next_safe(const struct rb_node *n,
          &(pos)->member != rb_end((tree));                                     \
          (pos) = (n), (n) = rb_next_entry_safe((pos), (tree), member))
 
+#if __STDC_VERSION__ >= 199901L
+
+#define rb_for_each_init(pos, tree)                                            \
+    for (struct rb_node *pos = rb_first((tree)); pos != rb_end((tree));        \
+         pos = rb_next((pos)))
+
+#define rb_for_each_safe_init(pos, tree)                                       \
+    for (struct rb_node *pos = rb_first((tree)),                               \
+                        *_rb_next = rb_next_safe((pos), (tree));               \
+         pos != rb_end((tree));                                                \
+         (pos) = _rb_next, _rb_next = rb_next_safe((pos), (tree)))
+
 #define rb_for_each_entry_init(type, pos, tree, member)                        \
     for (type *pos = rb_first_entry((tree), type, member);                     \
          &pos->member != rb_end((tree)); pos = rb_next_entry(pos, member))
@@ -123,6 +129,8 @@ static inline struct rb_node *rb_next_safe(const struct rb_node *n,
               *_rb_next = rb_next_entry_safe(pos, (tree), member);             \
          &pos->member != rb_end((tree));                                       \
          pos = _rb_next, _rb_next = rb_next_entry_safe(pos, (tree), member))
+
+#endif
 
 void rb_balance_insert(struct rb_node *x, struct rb_root *root);
 
@@ -191,5 +199,9 @@ rb_find_or_insert(const void *key, struct rb_root *root, struct rb_node *node,
     rb_balance_insert(node, root);
     return NULL;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // !RBTREE_H
