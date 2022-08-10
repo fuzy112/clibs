@@ -134,7 +134,7 @@ static inline struct rb_node *rb_next_safe(const struct rb_node *n,
 
 void rb_balance_insert(struct rb_node *x, struct rb_root *root);
 
-void rb_remove(struct rb_node *x, struct rb_root *root);
+void rb_erase(struct rb_node *x, struct rb_root *root);
 
 void rb_replace_node(struct rb_node *old, struct rb_node *new_node);
 
