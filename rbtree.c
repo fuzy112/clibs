@@ -242,7 +242,7 @@ void rb_balance_insert(struct rb_node *x, struct rb_root *root)
     } /* while (x != root && !x->rb_parent->rb_is_black) */
 }
 
-void rb_remove(struct rb_node *x, struct rb_root *root)
+void rb_erase(struct rb_node *x, struct rb_root *root)
 {
     /*
       y is either x or x's successor,

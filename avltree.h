@@ -131,4 +131,6 @@ void avl_link_node(struct avl_node *node, struct avl_node *parent,
                    struct avl_node **link);
 void avl_balance_insert(struct avl_node *node, struct avl_root *tree);
 
+void avl_erase(struct avl_node *node, struct avl_root *tree);
+
 #endif // !AVLTREE_H
