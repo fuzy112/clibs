@@ -48,7 +48,13 @@ static const void *avl_get_right(const void *node)
 static int avl_get_label(const void *node, char *label)
 {
     const struct avl_tree_node *x = node;
-    return snprintf(label, T2D_LABEL_MAX, "%d", x->value);
+    return snprintf(label, T2D_LABEL_MAX, "\"%d\\n%s\"", x->value,
+        x->node.avl_balance == -2 ? "--" :
+        x->node.avl_balance == -1 ? "-" :
+        x->node.avl_balance == 0 ? "0" :
+        x->node.avl_balance == +1 ? "+" :
+        x->node.avl_balance == +2 ? "++" :
+        "X");
 }
 
 static const char *avl_get_color(const void *node) { return "skyblue"; }
