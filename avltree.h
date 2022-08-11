@@ -38,7 +38,7 @@ struct avl_node {
     struct avl_node *avl_left;
     struct avl_node *avl_right;
     struct avl_node *avl_parent;
-    int_least8_t avl_balance;
+    int_fast8_t avl_balance;
 };
 
 struct __attribute__((may_alias)) avl_root {
