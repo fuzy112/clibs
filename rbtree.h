@@ -108,7 +108,7 @@ static inline struct rb_node *rb_next_safe(const struct rb_node *n,
          &(pos)->member != rb_end((tree));                                     \
          (pos) = (n), (n) = rb_next_entry_safe((pos), (tree), member))
 
-#if __STDC_VERSION__ >= 199901L
+#if __STDC_VERSION__ >= 199901L || __cplusplus
 
 #define rb_for_each_init(pos, tree)                                            \
     for (struct rb_node *pos = rb_first((tree)); pos != rb_end((tree));        \
