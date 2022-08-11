@@ -1,13 +1,24 @@
+#if defined(_MSC_VER) && !defined(__clang__)
+#define __attribute__(...)
+#endif
+
+#if !defined(__GNUC__)
+#define typeof(...) std::decay_t<decltype((__VA_ARGS__))>
+#endif
+
+#include <type_traits>
 #include "avltree.c"
 #include "rbtree.c"
 
+#ifdef ENABLE_BOOST
 #include <boost/intrusive/rbtree.hpp>
+#endif
 
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#include <random>
 
 static void die(const char *msg)
 {
@@ -15,27 +26,30 @@ static void die(const char *msg)
     exit(1);
 }
 
-#if __STDC_VERSION__ >= 201101L || __cplusplus >= 201101L
-static uint64_t get_time(void)
-{
-    struct timespec ts;
-
-    timespec_get(&ts, TIME_UTC);
-    return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
-}
-#elif defined(_WIN32)
+#if defined(_WIN32)
 #include <Windows.h>
 #define get_time GetTickCount
+#else
+#include <time.h>
+static uint64_t get_time(void)
+{
+    timespec ts;
+
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+}
 #endif
 
 static void prepare_sample(size_t nr_samples, size_t block_size,
                            ptrdiff_t value_offset, void *samples)
 {
+    std::random_device rd;
+    std::mt19937 gen(rd());
     for (size_t i = 0; i < nr_samples; ++i) {
         char *block = (char *)samples + block_size * i;
         void *value = block + value_offset;
-        int tmp = rand();
-	memcpy(value, &tmp, sizeof(tmp));
+        int tmp = gen();
+	    *(int volatile *)value = tmp;
     }
 }
 
@@ -50,7 +64,7 @@ static void print_result(const char *name, size_t nr_entries, uint64_t t0,
 }
 
 struct entry_rb {
-    int value;
+        int value;
     int dummy[10];
     struct rb_node node;
 };
@@ -159,6 +173,7 @@ static void benchmark_avl(size_t nr_entries)
     print_result("avltree", nr_entries, t0, t1, t2);
 }
 
+#ifdef ENABLE_BOOST
 struct entry_irb : boost::intrusive::set_base_hook<> {
     int value;
     int dummy[10];
@@ -197,6 +212,8 @@ static void benchmark_irb(size_t nr_entries)
     print_result("boost-rbtree", nr_entries, t0, t1, t2);
 }
 
+#endif
+
 struct benchmark {
     const char *name;
     void (*proc)(size_t);
@@ -205,7 +222,9 @@ struct benchmark {
 static const struct benchmark benchmarks[] = {
     {.name = "rbtree", .proc = benchmark_rb},
     {.name = "avltree", .proc = benchmark_avl},
+    #ifdef ENABLE_BOOST
     {.name = "boost-rbtree", .proc = benchmark_irb},
+    #endif
     {},
 };
 
