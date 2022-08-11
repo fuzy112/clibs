@@ -48,17 +48,21 @@ static const void *rb_get_right(const void *node)
 static int rb_get_label(const void *node, char *label)
 {
     const struct rb_tree_node *x = node;
-    return snprintf(label, T2D_LABEL_MAX, "%d", x->value);
+
+    if (x != NULL)
+        return snprintf(label, T2D_LABEL_MAX, "%d", x->value);
+    else
+        return snprintf(label, T2D_LABEL_MAX, "NIL");
 }
 
 static const char *rb_get_color(const void *node)
 {
     const struct rb_node *x = node;
-    return x->rb_is_black ? "black" : "red";
+    return (x == NULL || x->rb_is_black) ? "black" : "red";
 }
 
 static struct t2d_config rb_config = {
-    .show_nil = false,
+    .show_nil = true,
     .get_color = rb_get_color,
     .get_parent = rb_get_parent,
     .get_label = rb_get_label,

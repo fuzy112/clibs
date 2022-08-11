@@ -45,7 +45,9 @@ struct rb_node {
 };
 
 #define RB_ROOT_INIT                                                           \
-    (struct rb_root) { NULL }
+    {                                                                          \
+        NULL                                                                   \
+    }
 
 void rb_link_node(struct rb_node *rb_node, struct rb_node *rb_parent,
                   struct rb_node **rb_link);
@@ -78,12 +80,22 @@ static inline struct rb_node *rb_next_safe(const struct rb_node *n,
          (pos) != rb_end((tree));                                              \
          (pos) = (n), (n) = rb_next_safe((pos), (tree)))
 
-
 #define rb_entry(ptr, type, member) container_of(ptr, type, member)
 
+#ifdef __GNUC__
 #define rb_entry_safe(ptr, type, member)                                       \
-    ({ typeof(ptr) _rb_ptr = ptr;                                              \
-      _rb_ptr ? rb_entry(_rb_ptr, type, member) : NULL; })
+    ({                                                                         \
+        typeof(ptr) _avl_ptr = ptr;                                            \
+        _avl_ptr ? avl_entry(_avl_ptr, type, member) : NULL;                   \
+    })
+#else
+static inline void *__rb_entry_safe(void *ptr, ptrdiff_t offset)
+{
+    return ptr ? (char *)ptr - offset : NULL;
+}
+#define rb_entry_safe(ptr, type, member)                                       \
+    ((type *)__rb_entry_safe((void *)(ptr), offsetof(type, member)))
+#endif
 
 #define rb_first_entry(tree, type, member)                                     \
     rb_entry(rb_first((tree)), type, member)

@@ -42,7 +42,9 @@ int t2d_write_tree(struct t2d_config *cfg, const void *root)
 {
     fprintf(cfg->file, "digraph {\n");
     fprintf(cfg->file, "ordering=out\n");
-    fprintf(cfg->file, "node[style=filled, shape=circle]\n");
+    fprintf(cfg->file, "node[shape=circle, fontsize=12, fontcolor=white, "
+                       "style=filled, color=skyblue]\n"
+                       "edge[shape=solid, color=black]\n");
 
     if (t2d_write_node(cfg, root) == 0)
         return -1;

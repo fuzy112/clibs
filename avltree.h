@@ -46,7 +46,9 @@ struct __attribute__((may_alias)) avl_root {
 };
 
 #define AVL_ROOT_INIT                                                          \
-    (struct avl_root) { NULL }
+    {                                                                          \
+        NULL                                                                   \
+    }
 
 #define avl_end(tree) ((struct avl_node *)tree)
 struct avl_node *avl_first(const struct avl_root *tree);
@@ -78,11 +80,20 @@ static inline struct avl_node *avl_next_safe(const struct avl_node *n,
 
 #define avl_entry(ptr, type, member) container_of(ptr, type, member)
 
+#ifdef __GNUC__
 #define avl_entry_safe(ptr, type, member)                                      \
     ({                                                                         \
         typeof(ptr) _avl_ptr = ptr;                                            \
         _avl_ptr ? avl_entry(_avl_ptr, type, member) : NULL;                   \
     })
+#else
+static inline void *__avl_entry_safe(void *ptr, ptrdiff_t offset)
+{
+    return ptr ? (char *)ptr - offset : NULL;
+}
+#define avl_entry_safe(ptr, type, member)                                      \
+    ((type *)__avl_entry_safe((void *)(ptr), offsetof(type, member)))
+#endif
 
 #define avl_first_entry(tree, type, member)                                    \
     avl_entry(avl_first((tree)), type, member)
@@ -140,6 +151,5 @@ void avl_erase(struct avl_node *node, struct avl_root *tree);
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif // !AVLTREE_H
