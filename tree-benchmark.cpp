@@ -1,5 +1,7 @@
-#include "avltree.h"
-#include "rbtree.h"
+#include "avltree.c"
+#include "rbtree.c"
+
+#include <boost/intrusive/rbtree.hpp>
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -13,12 +15,7 @@ static void die(const char *msg)
     exit(1);
 }
 
-static void usage(FILE *out, const char *program)
-{
-    fprintf(out, "%s rbtree|avltree samples\n", program);
-}
-
-#if __STDC_VERSION__ >= 201101L
+#if __STDC_VERSION__ >= 201101L || __cplusplus >= 201101L
 static uint64_t get_time(void)
 {
     struct timespec ts;
@@ -31,6 +28,17 @@ static uint64_t get_time(void)
 #define get_time GetTickCount
 #endif
 
+static void prepare_sample(size_t nr_samples, size_t block_size,
+                           ptrdiff_t value_offset, void *samples)
+{
+    for (size_t i = 0; i < nr_samples; ++i) {
+        char *block = (char *)samples + block_size * i;
+        void *value = block + value_offset;
+        int tmp = rand();
+	memcpy(value, &tmp, sizeof(tmp));
+    }
+}
+
 static void print_result(const char *name, size_t nr_entries, uint64_t t0,
                          uint64_t t1, uint64_t t2)
 {
@@ -42,8 +50,9 @@ static void print_result(const char *name, size_t nr_entries, uint64_t t0,
 }
 
 struct entry_rb {
-    struct rb_node node;
     int value;
+    int dummy[10];
+    struct rb_node node;
 };
 
 static void insert_rb(struct entry_rb *entry, struct rb_root *tree)
@@ -67,22 +76,23 @@ static void insert_rb(struct entry_rb *entry, struct rb_root *tree)
 static void benchmark_rb(size_t nr_entries)
 {
     struct rb_root tree = RB_ROOT_INIT;
-    struct entry_rb *entries = calloc(nr_entries, sizeof(struct entry_rb));
+    struct entry_rb *entries = (struct entry_rb *)calloc(nr_entries, sizeof(struct entry_rb));
     if (!entries)
         die("calloc");
+
+    prepare_sample(nr_entries, sizeof(struct entry_rb),
+                   offsetof(struct entry_rb, value), entries);
 
     uint64_t t0 = get_time();
 
     for (size_t i = 0; i < nr_entries; ++i) {
         struct entry_rb *entry = &entries[i];
-        entry->value = i % 13 + i % 47;
         insert_rb(entry, &tree);
     }
 
     uint64_t t1 = get_time();
 
-    rb_for_each_entry_safe_init(struct entry_rb, iter, &tree, node)
-    {
+    rb_for_each_entry_safe_init (struct entry_rb, iter, &tree, node) {
         rb_erase(&iter->node, &tree);
     }
 
@@ -94,8 +104,9 @@ static void benchmark_rb(size_t nr_entries)
 }
 
 struct entry_avl {
-    struct avl_node node;
     int value;
+    int dummy[10];
+    struct avl_node node;
 };
 
 static void insert_avl(struct entry_avl *entry, struct avl_root *tree)
@@ -119,15 +130,18 @@ static void insert_avl(struct entry_avl *entry, struct avl_root *tree)
 static void benchmark_avl(size_t nr_entries)
 {
     struct avl_root tree = AVL_ROOT_INIT;
-    struct entry_avl *entries = calloc(nr_entries, sizeof(struct entry_avl));
+    struct entry_avl *entries =
+        (struct entry_avl *)calloc(nr_entries, sizeof(struct entry_avl));
     if (!entries)
         die("calloc");
+
+    prepare_sample(nr_entries, sizeof(struct entry_avl),
+                   offsetof(struct entry_avl, value), entries);
 
     uint64_t t0 = get_time();
 
     for (size_t i = 0; i < nr_entries; ++i) {
         struct entry_avl *entry = &entries[i];
-        entry->value = i % 13 + i % 17;
         insert_avl(entry, &tree);
     }
 
@@ -145,6 +159,70 @@ static void benchmark_avl(size_t nr_entries)
     print_result("avltree", nr_entries, t0, t1, t2);
 }
 
+struct entry_irb : boost::intrusive::set_base_hook<> {
+    int value;
+    int dummy[10];
+};
+
+struct key_of_value_irb {
+    using type = int;
+
+    int operator()(entry_irb const &e) const noexcept { return e.value; }
+};
+
+static void benchmark_irb(size_t nr_entries)
+{
+    boost::intrusive::rbtree<entry_irb,
+                             boost::intrusive::key_of_value<key_of_value_irb>>
+        tree;
+
+    struct entry_irb *entries = new entry_irb[nr_entries];
+
+    prepare_sample(nr_entries, sizeof(entry_irb), offsetof(entry_irb, value),
+                   entries);
+
+    long t0 = get_time();
+
+    for (size_t i = 0; i < nr_entries; ++i) {
+        tree.insert_equal(entries[i]);
+    }
+
+    long t1 = get_time();
+
+    tree.clear();
+
+    long t2 = get_time();
+
+    delete[] entries;
+    print_result("boost-rbtree", nr_entries, t0, t1, t2);
+}
+
+struct benchmark {
+    const char *name;
+    void (*proc)(size_t);
+};
+
+static const struct benchmark benchmarks[] = {
+    {.name = "rbtree", .proc = benchmark_rb},
+    {.name = "avltree", .proc = benchmark_avl},
+    {.name = "boost-rbtree", .proc = benchmark_irb},
+    {},
+};
+
+static void usage(FILE *out, const char *program)
+{
+    fprintf(out, "%s ", program);
+    bool need_sep = false;
+    for (const struct benchmark *iter = benchmarks; iter->name != NULL;
+         ++iter) {
+        if (need_sep)
+            fprintf(out, "|");
+        need_sep = true;
+        fprintf(out, "%s", iter->name);
+    }
+    fprintf(out, "\n");
+}
+
 int main(int argc, char *argv[])
 {
     if (argc != 3) {
@@ -157,13 +235,15 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    if (strcmp(argv[1], "rbtree") == 0) {
-        benchmark_rb(atoi(argv[2]));
-    } else if (strcmp(argv[1], "avltree") == 0) {
-        benchmark_avl(atoi(argv[2]));
-    } else {
-        usage(stderr, argv[0]);
-        return 1;
+    for (const struct benchmark *iter = benchmarks; iter->name != NULL;
+         ++iter) {
+
+        if (strcmp(argv[1], iter->name) == 0) {
+            iter->proc(atoi(argv[2]));
+            return 0;
+        }
     }
-    return 0;
+
+    usage(stderr, argv[0]);
+    return 1;
 }

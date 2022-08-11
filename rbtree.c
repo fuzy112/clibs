@@ -445,5 +445,5 @@ void rb_replace_node(struct rb_node *old, struct rb_node *new_node)
     old->rb_parent = NULL;
     old->rb_left = NULL;
     old->rb_right = NULL;
-    old->rb_is_black = NULL;
+    old->rb_is_black = false;
 }

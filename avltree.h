@@ -25,6 +25,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef container_of
 #define container_of(ptr, type, member)                                        \
     ((type *)((char *)ptr - offsetof(type, member)))
@@ -103,7 +107,7 @@ static inline struct avl_node *avl_next_safe(const struct avl_node *n,
          &(pos)->member != avl_end((tree));                                    \
          (pos) = (n), (n) = avl_next_entry_safe((pos), (tree), member))
 
-#if __STDC_VERSION__ >= 199901L
+#if __STDC_VERSION__ >= 199901L || __cplusplus
 
 #define avl_for_each_init(pos, tree)                                           \
     for (struct avl_node *pos = avl_first((tree)); pos != avl_end((tree));     \
@@ -132,5 +136,10 @@ void avl_link_node(struct avl_node *node, struct avl_node *parent,
 void avl_balance_insert(struct avl_node *node, struct avl_root *tree);
 
 void avl_erase(struct avl_node *node, struct avl_root *tree);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif // !AVLTREE_H
