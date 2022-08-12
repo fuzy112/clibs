@@ -34,6 +34,14 @@ extern "C" {
     ((type *)((char *)ptr - offsetof(type, member)))
 #endif
 
+#ifndef __may_alias
+#if defined(_MSC_VER) && !defined(__clang__)
+#define __may_alias
+#else
+#define __may_alias __attribute__((__may_alias__))
+#endif
+#endif
+
 struct avl_node {
     struct avl_node *avl_left;
     struct avl_node *avl_right;
@@ -41,17 +49,18 @@ struct avl_node {
     int_fast8_t avl_balance;
 };
 
-struct __attribute__((may_alias)) avl_root {
+struct __may_alias avl_root {
     struct avl_node *avl_node;
 };
 
-#ifndef __cplusplus
-#define AVL_ROOT_INIT                                                          \
-    (struct avl_root) { NULL }
-#else
-#define AVL_ROOT_INIT                                                          \
-    avl_root {}
-#endif
+// clang-format off
+#define AVL_ROOT_INIT { NULL }
+// clang-format on
+
+static inline void avl_root_init(struct avl_root *tree)
+{
+    tree->avl_node = NULL;
+}
 
 #define avl_end(tree) ((struct avl_node *)tree)
 struct avl_node *avl_first(const struct avl_root *tree);

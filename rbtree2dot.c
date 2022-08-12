@@ -78,7 +78,7 @@ int main()
 
     rb_config.file = stdout;
 
-    while (~scanf("%d", &v)) {
+    while (scanf("%d", &v) > 0) {
         struct rb_tree_node *node = malloc(sizeof(*node));
         if (!node) {
             perror("malloc");
@@ -92,8 +92,23 @@ int main()
 
     t2d_write_tree(&rb_config, tree.rb_node);
 
+#ifdef __GNUC__
     rb_for_each_entry_safe_init (struct rb_tree_node, iter, &tree, node) {
         rb_erase(&iter->node, &tree);
         free(iter);
     }
+
+#else
+    {
+        struct rb_node *iter, *n;
+
+        rb_for_each_safe (iter, n, &tree) {
+            struct rb_tree_node *node =
+                rb_entry(iter, struct rb_tree_node, node);
+            rb_erase(iter, &tree);
+            free(node);
+        }
+    }
+
+#endif
 }

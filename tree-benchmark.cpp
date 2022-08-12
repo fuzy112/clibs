@@ -1,24 +1,16 @@
-#if defined(_MSC_VER) && !defined(__clang__)
-#define __attribute__(...)
-#endif
-
-#if !defined(__GNUC__)
-#define typeof(...) std::decay_t<decltype((__VA_ARGS__))>
-#endif
-
-#include <type_traits>
 #include "avltree.c"
 #include "rbtree.c"
+#include <type_traits>
 
 #ifdef ENABLE_BOOST
 #include <boost/intrusive/rbtree.hpp>
 #endif
 
 #include <inttypes.h>
+#include <random>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <random>
 
 static void die(const char *msg)
 {
@@ -35,7 +27,9 @@ static uint64_t get_time(void)
 {
     timespec ts;
 
-    clock_gettime(CLOCK_MONOTONIC, &ts);
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0)
+        die("clock_gettime");
+
     return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
 }
 #endif
@@ -49,7 +43,7 @@ static void prepare_sample(size_t nr_samples, size_t block_size,
         char *block = (char *)samples + block_size * i;
         void *value = block + value_offset;
         int tmp = gen();
-	    *(int volatile *)value = tmp;
+        *(int volatile *)value = tmp;
     }
 }
 
@@ -64,7 +58,7 @@ static void print_result(const char *name, size_t nr_entries, uint64_t t0,
 }
 
 struct entry_rb {
-        int value;
+    int value;
     int dummy[10];
     struct rb_node node;
 };
@@ -90,7 +84,7 @@ static void insert_rb(struct entry_rb *entry, struct rb_root *tree)
 static void benchmark_rb(size_t nr_entries)
 {
     struct rb_root tree = RB_ROOT_INIT;
-    struct entry_rb *entries = (struct entry_rb *)calloc(nr_entries, sizeof(struct entry_rb));
+    struct entry_rb *entries = new entry_rb[nr_entries];
     if (!entries)
         die("calloc");
 
@@ -106,13 +100,13 @@ static void benchmark_rb(size_t nr_entries)
 
     uint64_t t1 = get_time();
 
-    rb_for_each_entry_safe_init (struct entry_rb, iter, &tree, node) {
-        rb_erase(&iter->node, &tree);
+    rb_for_each_safe_init (iter, &tree) {
+        rb_erase(iter, &tree);
     }
 
     uint64_t t2 = get_time();
 
-    free(entries);
+    delete[] entries;
 
     print_result("rbtree", nr_entries, t0, t1, t2);
 }
@@ -144,8 +138,7 @@ static void insert_avl(struct entry_avl *entry, struct avl_root *tree)
 static void benchmark_avl(size_t nr_entries)
 {
     struct avl_root tree = AVL_ROOT_INIT;
-    struct entry_avl *entries =
-        (struct entry_avl *)calloc(nr_entries, sizeof(struct entry_avl));
+    struct entry_avl *entries = new entry_avl[nr_entries];
     if (!entries)
         die("calloc");
 
@@ -161,14 +154,12 @@ static void benchmark_avl(size_t nr_entries)
 
     uint64_t t1 = get_time();
 
-    avl_for_each_entry_safe_init(struct entry_avl, iter, &tree, node)
-    {
-        avl_erase(&iter->node, &tree);
+    avl_for_each_safe_init (iter, &tree) {
+        avl_erase(iter, &tree);
     }
-
     uint64_t t2 = get_time();
 
-    free(entries);
+    delete[] entries;
 
     print_result("avltree", nr_entries, t0, t1, t2);
 }
@@ -220,11 +211,11 @@ struct benchmark {
 };
 
 static const struct benchmark benchmarks[] = {
-    {.name = "rbtree", .proc = benchmark_rb},
-    {.name = "avltree", .proc = benchmark_avl},
-    #ifdef ENABLE_BOOST
-    {.name = "boost-rbtree", .proc = benchmark_irb},
-    #endif
+    {"rbtree", benchmark_rb},
+    {"avltree", benchmark_avl},
+#ifdef ENABLE_BOOST
+    {"boost-rbtree", benchmark_irb},
+#endif
     {},
 };
 
