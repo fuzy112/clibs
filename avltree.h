@@ -45,10 +45,13 @@ struct __attribute__((may_alias)) avl_root {
     struct avl_node *avl_node;
 };
 
+#ifndef __cplusplus
 #define AVL_ROOT_INIT                                                          \
-    {                                                                          \
-        NULL                                                                   \
-    }
+    (struct avl_root) { NULL }
+#else
+#define AVL_ROOT_INIT                                                          \
+    avl_root {}
+#endif
 
 #define avl_end(tree) ((struct avl_node *)tree)
 struct avl_node *avl_first(const struct avl_root *tree);
