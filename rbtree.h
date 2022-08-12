@@ -44,10 +44,13 @@ struct rb_node {
     bool rb_is_black;
 };
 
+#ifndef __cplusplus
 #define RB_ROOT_INIT                                                           \
-    {                                                                          \
-        NULL                                                                   \
-    }
+    (struct rb_root) { NULL }
+#else
+#define RB_ROOT_INIT                                                           \
+    rb_root {}
+#endif
 
 void rb_link_node(struct rb_node *rb_node, struct rb_node *rb_parent,
                   struct rb_node **rb_link);
@@ -85,8 +88,8 @@ static inline struct rb_node *rb_next_safe(const struct rb_node *n,
 #ifdef __GNUC__
 #define rb_entry_safe(ptr, type, member)                                       \
     ({                                                                         \
-        typeof(ptr) _avl_ptr = ptr;                                            \
-        _avl_ptr ? avl_entry(_avl_ptr, type, member) : NULL;                   \
+        typeof(ptr) _rb_ptr = ptr;                                             \
+        _rb_ptr ? rb_entry(_rb_ptr, type, member) : NULL;                      \
     })
 #else
 static inline void *__rb_entry_safe(void *ptr, ptrdiff_t offset)
