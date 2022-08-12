@@ -19,8 +19,10 @@ t2d_node_id_t t2d_write_node(struct t2d_config *cfg, const void *node)
             return 0;
 
         cfg->get_label(node, label);
-        fprintf(cfg->file, FMT_NODE_ID "[label=%s, fillcolor=%s]\n", id, label,
-                cfg->get_color(node));
+        fprintf(cfg->file,
+                FMT_NODE_ID
+                "[label=%s, fillcolor=%s, shape=rect, width=0, height=0]\n",
+                id, label, cfg->get_color(node));
     } else {
         t2d_node_id_t left_id = t2d_write_node(cfg, cfg->get_left(node));
         t2d_node_id_t right_id = t2d_write_node(cfg, cfg->get_right(node));
@@ -29,10 +31,12 @@ t2d_node_id_t t2d_write_node(struct t2d_config *cfg, const void *node)
         fprintf(cfg->file, FMT_NODE_ID "[label=%s, fillcolor=%s]\n", id, label,
                 cfg->get_color(node));
         if (left_id != 0)
-            fprintf(cfg->file, FMT_NODE_ID " -> " FMT_NODE_ID "\n", id, left_id);
+            fprintf(cfg->file, FMT_NODE_ID " -> " FMT_NODE_ID "\n", id,
+                    left_id);
 
         if (right_id != 0)
-            fprintf(cfg->file, FMT_NODE_ID " -> " FMT_NODE_ID "\n", id, right_id);
+            fprintf(cfg->file, FMT_NODE_ID " -> " FMT_NODE_ID "\n", id,
+                    right_id);
     }
 
     return id;

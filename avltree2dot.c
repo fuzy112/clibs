@@ -1,7 +1,7 @@
 #include "avltree.h"
 #include "tree2dot.h"
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 struct avl_tree_node {
     struct avl_node node;
@@ -45,16 +45,16 @@ static const void *avl_get_right(const void *node)
     return x->avl_right;
 }
 
-static int avl_get_label(const void *node, char *label)
+static int avl_get_label(const void *node, char label[T2D_LABEL_MAX])
 {
     const struct avl_tree_node *x = node;
     return snprintf(label, T2D_LABEL_MAX, "\"%d\\n%s\"", x->value,
-        x->node.avl_balance == -2 ? "--" :
-        x->node.avl_balance == -1 ? "-" :
-        x->node.avl_balance == 0 ? "0" :
-        x->node.avl_balance == +1 ? "+" :
-        x->node.avl_balance == +2 ? "++" :
-        "X");
+                    x->node.avl_balance == -2   ? "--"
+                    : x->node.avl_balance == -1 ? "-"
+                    : x->node.avl_balance == 0  ? "0"
+                    : x->node.avl_balance == +1 ? "+"
+                    : x->node.avl_balance == +2 ? "++"
+                                                : "X");
 }
 
 static const char *avl_get_color(const void *node) { return "skyblue"; }
@@ -76,7 +76,7 @@ int main()
 
     avl_config.file = stdout;
 
-    while (~scanf("%d", &v)) {
+    while (scanf("%d", &v) > 0) {
         struct avl_tree_node *node = malloc(sizeof(*node));
         if (!node) {
             perror("malloc");
@@ -90,9 +90,21 @@ int main()
 
     t2d_write_tree(&avl_config, tree.avl_node);
 
-    avl_for_each_entry_safe_init(struct avl_tree_node, iter, &tree, node)
-    {
+#ifdef __GNUC__
+    avl_for_each_entry_safe_init (struct avl_tree_node, iter, &tree, node) {
         avl_erase(&iter->node, &tree);
         free(iter);
     }
+#else
+    {
+        struct avl_node *iter, *n;
+
+        avl_for_each_safe (iter, n, &tree) {
+            struct avl_tree_node *node =
+                avl_entry(iter, struct avl_tree_node, node);
+            avl_erase(iter, &tree);
+            free(node);
+        }
+    }
+#endif
 }

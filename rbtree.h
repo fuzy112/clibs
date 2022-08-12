@@ -33,7 +33,15 @@ extern "C" {
     ((type *)((char *)ptr - offsetof(type, member)))
 #endif
 
-struct __attribute__((may_alias)) rb_root {
+#ifndef __may_alias
+#if defined(_MSC_VER) && !defined(__clang__)
+#define __may_alias
+#else
+#define __may_alias __attribute__((__may_alias__))
+#endif
+#endif
+
+struct __may_alias rb_root {
     struct rb_node *rb_node;
 };
 
@@ -44,13 +52,11 @@ struct rb_node {
     bool rb_is_black;
 };
 
-#ifndef __cplusplus
-#define RB_ROOT_INIT                                                           \
-    (struct rb_root) { NULL }
-#else
-#define RB_ROOT_INIT                                                           \
-    rb_root {}
-#endif
+// clang-format off
+#define RB_ROOT_INIT   { NULL }
+// clang-format on
+
+static inline void rb_root_init(struct rb_root *tree) { tree->rb_node = NULL; }
 
 void rb_link_node(struct rb_node *rb_node, struct rb_node *rb_parent,
                   struct rb_node **rb_link);

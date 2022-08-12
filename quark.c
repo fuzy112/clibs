@@ -41,9 +41,11 @@ void quark_init() {}
 
 void quark_exit()
 {
-    rb_for_each_entry_safe_init(struct quark_entry, entry, &str_root, str_node)
-    {
-        rb_remove(&entry->str_node, &str_root);
+    struct rb_node *iter, *n;
+    rb_for_each_safe (iter, n, &str_root) {
+        struct quark_entry *entry =
+            rb_entry(iter, struct quark_entry, str_node);
+        rb_erase(iter, &str_root);
         free(entry);
     }
 }

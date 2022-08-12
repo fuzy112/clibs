@@ -44,7 +44,7 @@ static struct dict *dict_alloc(void (*free)(void *),
         return NULL;
     retval->dict_free_value = free;
     retval->dict_clone_value = clone;
-    retval->dict_tree = RB_ROOT_INIT;
+    rb_root_init(&retval->dict_tree);
     return retval;
 }
 
@@ -61,10 +61,10 @@ int dict_create(struct dict **dict, void (*free_value)(void *),
 
 void dict_destroy(struct dict *dict)
 {
-    rb_for_each_entry_safe_init(struct dict_entry, entry, &dict->dict_tree,
-                                dict_node)
-    {
-        rb_remove(&entry->dict_node, &dict->dict_tree);
+    struct rb_node *iter, *n;
+    rb_for_each_safe (iter, n, &dict->dict_tree) {
+        struct dict_entry *entry = rb_entry(iter, struct dict_entry, dict_node);
+        rb_erase(&entry->dict_node, &dict->dict_tree);
         dict->dict_free_value(entry->dict_value);
         free(entry);
     }
@@ -91,7 +91,7 @@ static struct dict_entry *alloc_entry(struct dict *dict, const char *key,
 
 static void remove_entry(struct dict *dict, struct dict_entry *entry)
 {
-    rb_remove(&entry->dict_node, &dict->dict_tree);
+    rb_erase(&entry->dict_node, &dict->dict_tree);
     dict->dict_free_value(entry->dict_value);
     free(entry);
 }
