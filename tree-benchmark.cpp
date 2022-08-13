@@ -1,5 +1,6 @@
 #include "avltree.c"
 #include "rbtree.c"
+#include "splay.c"
 #include <type_traits>
 
 #ifdef ENABLE_BOOST
@@ -164,6 +165,59 @@ static void benchmark_avl(size_t nr_entries)
     print_result("avltree", nr_entries, t0, t1, t2);
 }
 
+struct entry_splay {
+    int value;
+    int dummy[10];
+    struct splay_node node;
+};
+
+static void insert_splay(struct entry_splay *entry, struct splay_root *tree)
+{
+    struct splay_node *parent = splay_end(tree);
+    struct splay_node **link = &tree->splay_node;
+
+    while (*link) {
+        parent = *link;
+
+        if (entry->value < splay_entry(parent, struct entry_splay, node)->value)
+            link = &parent->splay_left;
+        else
+            link = &parent->splay_right;
+    }
+
+    splay_link_node(&entry->node, parent, link);
+    splay_balance(&entry->node, tree);
+}
+
+static void benchmark_splay(size_t nr_entries)
+{
+    struct splay_root tree = SPLAY_ROOT_INIT;
+    struct entry_splay *entries = new entry_splay[nr_entries]();
+    if (!entries)
+        die("calloc");
+
+    prepare_sample(nr_entries, sizeof(struct entry_splay),
+                   offsetof(struct entry_splay, value), entries);
+
+    uint64_t t0 = get_time();
+
+    for (size_t i = 0; i < nr_entries; ++i) {
+        struct entry_splay *entry = &entries[i];
+        insert_splay(entry, &tree);
+    }
+
+    uint64_t t1 = get_time();
+
+    splay_for_each_safe_init (iter, &tree) {
+        splay_erase(iter, &tree);
+    }
+    uint64_t t2 = get_time();
+
+    delete[] entries;
+
+    print_result("splay", nr_entries, t0, t1, t2);
+}
+
 #ifdef ENABLE_BOOST
 struct entry_irb : boost::intrusive::set_base_hook<> {
     int value;
@@ -213,6 +267,7 @@ struct benchmark {
 static const struct benchmark benchmarks[] = {
     {"rbtree", benchmark_rb},
     {"avltree", benchmark_avl},
+    {"splay", benchmark_splay},
 #ifdef ENABLE_BOOST
     {"boost-rbtree", benchmark_irb},
 #endif

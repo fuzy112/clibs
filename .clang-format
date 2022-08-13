@@ -1,0 +1,45 @@
+#
+# .clang-format
+# ~~~~~~~~~~~~~
+#
+# Copyright (c) 2022 Zhengyi Fu (tsingyat at outlook dot com)
+#
+# Distributed under the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+#
+
+---
+BasedOnStyle: LLVM
+AlignTrailingComments: true
+BreakBeforeBraces: Linux
+IndentWidth: 4
+
+ForEachMacros:
+  - avl_for_each
+  - avl_for_each_safe
+  - avl_for_each_entry
+  - avl_for_each_entry_safe
+  - avl_for_each_init
+  - avl_for_each_safe_init
+  - avl_for_each_entry_init
+  - avl_for_each_entry_safe_init
+
+  - rb_for_each
+  - rb_for_each_safe
+  - rb_for_each_entry
+  - rb_for_each_entry_safe
+  - rb_for_each_init
+  - rb_for_each_safe_init
+  - rb_for_each_entry_init
+  - rb_for_each_entry_safe_init
+
+  - splay_for_each
+  - splay_for_each_safe
+  - splay_for_each_entry
+  - splay_for_each_entry_safe
+  - splay_for_each_init
+  - splay_for_each_safe_init
+  - splay_for_each_entry_init
+  - splay_for_each_entry_safe_init
+
+# vim:set filetype=yaml:
