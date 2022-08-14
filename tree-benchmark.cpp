@@ -35,8 +35,11 @@ static uint64_t get_time(void)
 }
 #endif
 
-static void prepare_sample(size_t nr_samples, size_t block_size,
-                           ptrdiff_t value_offset, void *samples)
+typedef void (*prepare_sample_func_t)(size_t nr_samples, size_t block_size,
+                                      ptrdiff_t value_offset, void *samples);
+
+static void prepare_sample_random(size_t nr_samples, size_t block_size,
+                                  ptrdiff_t value_offset, void *samples)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -48,15 +51,56 @@ static void prepare_sample(size_t nr_samples, size_t block_size,
     }
 }
 
+static void prepare_sample_monotonic(size_t nr_samples, size_t block_size,
+                                     ptrdiff_t value_offset, void *samples)
+{
+    for (size_t i = 0; i < nr_samples; ++i) {
+        char *block = (char *)samples + block_size * i;
+        void *value = block + value_offset;
+        int tmp = i;
+        *(int volatile *)value = tmp;
+    }
+}
+
+static void prepare_sample_normal_distribution(size_t nr_samples,
+                                               size_t block_size,
+                                               ptrdiff_t value_offset,
+                                               void *samples)
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::normal_distribution<> norm(0, 0x1000);
+    for (size_t i = 0; i < nr_samples; ++i) {
+        char *block = (char *)samples + block_size * i;
+        void *value = block + value_offset;
+        int tmp = norm(gen);
+        *(int volatile *)value = tmp;
+    }
+}
+
+struct sample_func {
+    const char *name;
+    prepare_sample_func_t func;
+};
+
+static struct sample_func sample_funcs[] = {
+    {"random", prepare_sample_random},
+    {"monotonic", prepare_sample_monotonic},
+    {"normal", prepare_sample_normal_distribution},
+    {},
+};
+
 static void print_result(const char *name, size_t nr_entries, uint64_t t0,
                          uint64_t t1, uint64_t t2)
 {
     printf("name:       %16s\n", name);
     printf("samples:    %16lu\n", (unsigned long)nr_entries);
-    printf("insertion:  %16" PRIu64 "\n", t1 - t0);
-    printf("deletion:   %16" PRIu64 "\n", t2 - t1);
+    printf("insert:     %16" PRIu64 "\n", t1 - t0);
+    printf("search:     %16" PRIu64 "\n", t2 - t1);
     printf("total:      %16" PRIu64 "\n", t2 - t0);
 }
+
+void *volatile search_result;
 
 struct entry_rb {
     int value;
@@ -82,7 +126,26 @@ static void insert_rb(struct entry_rb *entry, struct rb_root *tree)
     rb_balance_insert(&entry->node, tree);
 }
 
-static void benchmark_rb(size_t nr_entries)
+static struct entry_rb *search_rb(int value, const struct rb_root *tree)
+{
+    struct rb_node *parent = tree->rb_node;
+
+    while (parent) {
+        int c = value - rb_entry(parent, struct entry_rb, node)->value;
+        if (c < 0)
+            parent = parent->rb_left;
+        else if (c > 0)
+            parent = parent->rb_right;
+        else
+            return rb_entry(parent, struct entry_rb, node);
+        ;
+    }
+
+    return NULL;
+}
+
+static void benchmark_rb(size_t nr_entries,
+                         prepare_sample_func_t prepare_sample)
 {
     struct rb_root tree = RB_ROOT_INIT;
     struct entry_rb *entries = new entry_rb[nr_entries];
@@ -100,6 +163,11 @@ static void benchmark_rb(size_t nr_entries)
     }
 
     uint64_t t1 = get_time();
+
+    for (size_t i = 0; i < nr_entries; ++i) {
+        for (int j = 0; j < 5; ++j)
+            search_result = search_rb(entries[i].value, &tree);
+    }
 
     rb_for_each_safe_init (iter, &tree) {
         rb_erase(iter, &tree);
@@ -136,7 +204,25 @@ static void insert_avl(struct entry_avl *entry, struct avl_root *tree)
     avl_balance_insert(&entry->node, tree);
 }
 
-static void benchmark_avl(size_t nr_entries)
+static struct entry_avl *search_avl(int value, const struct avl_root *tree)
+{
+    struct avl_node *parent = tree->avl_node;
+
+    while (parent) {
+        int c = value - avl_entry(parent, struct entry_avl, node)->value;
+        if (c < 0)
+            parent = parent->avl_left;
+        else if (c > 0)
+            parent = parent->avl_right;
+        else
+            return avl_entry(parent, struct entry_avl, node);
+    }
+
+    return NULL;
+}
+
+static void benchmark_avl(size_t nr_entries,
+                          prepare_sample_func_t prepare_sample)
 {
     struct avl_root tree = AVL_ROOT_INIT;
     struct entry_avl *entries = new entry_avl[nr_entries];
@@ -154,6 +240,12 @@ static void benchmark_avl(size_t nr_entries)
     }
 
     uint64_t t1 = get_time();
+
+    for (size_t i = 0; i < nr_entries; ++i) {
+        for (int j = 0; j < 5; ++j)
+
+            search_result = search_avl(entries[i].value, &tree);
+    }
 
     avl_for_each_safe_init (iter, &tree) {
         avl_erase(iter, &tree);
@@ -189,7 +281,27 @@ static void insert_splay(struct entry_splay *entry, struct splay_root *tree)
     splay_balance(&entry->node, tree);
 }
 
-static void benchmark_splay(size_t nr_entries)
+static struct entry_splay *search_splay(int value, struct splay_root *tree)
+{
+    struct splay_node *parent = tree->splay_node;
+
+    while (parent) {
+        int c = value - splay_entry(parent, struct entry_splay, node)->value;
+        if (c < 0)
+            parent = parent->splay_left;
+        else if (c > 0)
+            parent = parent->splay_right;
+        else {
+            splay_balance(parent, tree);
+            return splay_entry(parent, struct entry_splay, node);
+        }
+    }
+
+    return NULL;
+}
+
+static void benchmark_splay(size_t nr_entries,
+                            prepare_sample_func_t prepare_sample)
 {
     struct splay_root tree = SPLAY_ROOT_INIT;
     struct entry_splay *entries = new entry_splay[nr_entries]();
@@ -207,6 +319,11 @@ static void benchmark_splay(size_t nr_entries)
     }
 
     uint64_t t1 = get_time();
+
+    for (size_t i = 0; i < nr_entries; ++i) {
+        for (int j = 0; j < 5; ++j)
+            search_result = search_splay(entries[i].value, &tree);
+    }
 
     splay_for_each_safe_init (iter, &tree) {
         splay_erase(iter, &tree);
@@ -230,7 +347,8 @@ struct key_of_value_irb {
     int operator()(entry_irb const &e) const noexcept { return e.value; }
 };
 
-static void benchmark_irb(size_t nr_entries)
+static void benchmark_irb(size_t nr_entries,
+                          prepare_sample_func_t prepare_sample)
 {
     boost::intrusive::rbtree<entry_irb,
                              boost::intrusive::key_of_value<key_of_value_irb>>
@@ -249,6 +367,10 @@ static void benchmark_irb(size_t nr_entries)
 
     long t1 = get_time();
 
+    for (size_t i = 0; i < nr_entries; ++i) {
+        search_result = &*tree.find(entries[i].value);
+    }
+
     tree.clear();
 
     long t2 = get_time();
@@ -261,7 +383,7 @@ static void benchmark_irb(size_t nr_entries)
 
 struct benchmark {
     const char *name;
-    void (*proc)(size_t);
+    void (*proc)(size_t, prepare_sample_func_t);
 };
 
 static const struct benchmark benchmarks[] = {
@@ -290,7 +412,7 @@ static void usage(FILE *out, const char *program)
 
 int main(int argc, char *argv[])
 {
-    if (argc != 3) {
+    if (argc < 3) {
         usage(stderr, argv[0]);
         return -1;
     }
@@ -300,11 +422,22 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+    prepare_sample_func_t prepare_sample = prepare_sample_random;
+    if (argc > 3) {
+        for (const struct sample_func *iter = sample_funcs; iter->name != NULL;
+             ++iter) {
+            if (strcmp(argv[3], iter->name) == 0) {
+                prepare_sample = iter->func;
+                break;
+            }
+        }
+    }
+
     for (const struct benchmark *iter = benchmarks; iter->name != NULL;
          ++iter) {
 
         if (strcmp(argv[1], iter->name) == 0) {
-            iter->proc(atoi(argv[2]));
+            iter->proc(atoi(argv[2]), prepare_sample);
             return 0;
         }
     }
