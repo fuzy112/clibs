@@ -356,6 +356,7 @@ void rb_erase(struct rb_node *x, struct rb_root *root)
                 break;
             }
 
+            assert(w != NULL);
             if (!w->rb_is_black) {
                 /*
                    Case 2: z is black & w is red.
@@ -486,7 +487,7 @@ void rb_replace_node(struct rb_node *old, struct rb_node *new_node,
     if (left)
         left->rb_parent = new_node;
     if (right)
-        left->rb_parent = new_node;
+        right->rb_parent = new_node;
 
     old->rb_parent = NULL;
     old->rb_left = NULL;

@@ -66,6 +66,8 @@ struct xa_node *xa_get_leaf_by_index(struct xarray *xa,
             struct xa_node *node = *slot = xa_alloc_node(xa);
             if (node == NULL)
                 return NULL;
+
+            assert(xa_parent);
             node->xa_parent = xa_parent;
             node->xa_offset = xa_slot_index(xa_parent->xa_shift, index);
             node->xa_shift = xa_parent->xa_shift - XA_BITS;

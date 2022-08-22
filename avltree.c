@@ -361,6 +361,8 @@ void avl_erase(struct avl_node *x, struct avl_root *tree)
                     a b
              */
             struct avl_node *w = p->avl_right;
+
+            assert(w != NULL);
             if (w->avl_balance == 0) {
                 /*
                   h(a) = h(c) = h > 0
@@ -434,6 +436,7 @@ void avl_erase(struct avl_node *x, struct avl_root *tree)
             struct avl_node *w = p->avl_left;
             assert(p->avl_balance == -2);
 
+            assert(w != NULL);
             if (w->avl_balance == 0) {
                 avl_rotate_right(p, tree);
                 w->avl_balance = +1;
