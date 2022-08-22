@@ -110,7 +110,7 @@ struct entry_rb {
 
 static void insert_rb(struct entry_rb *entry, struct rb_root *tree)
 {
-    struct rb_node *parent = rb_end(tree);
+    struct rb_node *parent = NULL;
     struct rb_node **link = &tree->rb_node;
 
     while (*link) {
