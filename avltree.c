@@ -1,4 +1,4 @@
-/* avltree.h
+/* avltree.c
  *
  * Copyright 2022 Zhengyi Fu <tsingyat@outlook.com>
  *
