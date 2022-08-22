@@ -11,7 +11,7 @@ struct rb_tree_node {
 
 static void rb_insert_node(struct rb_tree_node *node, struct rb_root *tree)
 {
-    struct rb_node *parent = rb_end(tree);
+    struct rb_node *parent = NULL;
     struct rb_node **link = &tree->rb_node;
 
     while (*link != NULL) {

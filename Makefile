@@ -8,7 +8,7 @@ LDFLAGS += $(OPTS)
 
 CC=gcc
 
-EXE=.exe
+EXE=
 
 .PHONY: all
 
@@ -43,7 +43,7 @@ genrnd$(EXE): genrnd.o
 
 .PHONY: clean
 clean:
-	-del *.d *.o $(targets:%=%$(EXE))
+	-$(RM) *.d *.o $(targets:%=%$(EXE))
 
 *.o: Makefile
 
