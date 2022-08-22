@@ -1,7 +1,7 @@
 #include "rbtree.h"
 #include "tree2dot.h"
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 struct rb_tree_node {
     struct rb_node node;
@@ -92,13 +92,6 @@ int main()
 
     t2d_write_tree(&rb_config, tree.rb_node);
 
-#ifdef __GNUC__
-    rb_for_each_entry_safe_init (struct rb_tree_node, iter, &tree, node) {
-        rb_erase(&iter->node, &tree);
-        free(iter);
-    }
-
-#else
     {
         struct rb_node *iter, *n;
 
@@ -109,6 +102,4 @@ int main()
             free(node);
         }
     }
-
-#endif
 }

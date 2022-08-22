@@ -90,12 +90,6 @@ int main()
 
     t2d_write_tree(&avl_config, tree.avl_node);
 
-#ifdef __GNUC__
-    avl_for_each_entry_safe_init (struct avl_tree_node, iter, &tree, node) {
-        avl_erase(&iter->node, &tree);
-        free(iter);
-    }
-#else
     {
         struct avl_node *iter, *n;
 
@@ -106,5 +100,4 @@ int main()
             free(node);
         }
     }
-#endif
 }
