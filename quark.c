@@ -64,7 +64,7 @@ static struct quark_entry *alloc_entry(const char *str)
 
 static struct quark_entry *insert_or_find_entry(const char *str)
 {
-    struct rb_node *parent = rb_end(&str_root);
+    struct rb_node *parent = NULL;
     struct rb_node **link = &str_root.rb_node;
     int c;
     struct quark_entry *entry;
@@ -84,7 +84,7 @@ static struct quark_entry *insert_or_find_entry(const char *str)
     rb_link_node(&entry->str_node, parent, link);
     rb_balance_insert(&entry->str_node, &str_root);
 
-    parent = rb_end(&idx_root);
+    parent = NULL;
     link = &idx_root.rb_node;
 
     while (*link != NULL) {
@@ -118,7 +118,7 @@ const char *quark_intern(const char *str)
 
 const char *quark_to_str(quark_t quark)
 {
-    struct rb_node *parent = rb_end(&idx_root);
+    struct rb_node *parent = NULL;
     struct rb_node **link = &idx_root.rb_node;
     int c;
 
