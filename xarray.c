@@ -1,21 +1,21 @@
 #include "xarray.h"
 // #include "list.h"
 #include "error.h"
+#include <assert.h>
+#include <errno.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <limits.h>
-#include <errno.h>
 
-#define xa_slot_index(shift, index) \
-    ((index >> shift) & XA_MASK)
+#define xa_slot_index(shift, index) ((index >> shift) & XA_MASK)
 
 static unsigned long xa_max_index(uint8_t levels)
 {
     if (levels * XA_BITS > 8 * sizeof(unsigned long))
         return ULONG_MAX;
-    return  ((1lu << (XA_BITS * (levels))) - 1lu);
+    return ((1lu << (XA_BITS * (levels))) - 1lu);
 }
 
 static struct xa_node *xa_alloc_node(struct xarray *xa)
@@ -42,19 +42,20 @@ static int xa_increase_level(struct xarray *xa)
     xa->xa_slot = node;
     xa->xa_levels++;
     node->xa_shift = XA_BITS * (xa->xa_levels - 1);
-    node->xa_count = 1;
+    node->xa_count = old_root != NULL ? 1 : 0;
 
     return 0;
 }
 
 struct xa_node *xa_get_leaf_by_index(struct xarray *xa,
-                                              const unsigned long index)
+                                     const unsigned long index)
 {
     uint8_t i;
     void **slot;
     struct xa_node *xa_parent = NULL;
 
-    while ((index != ULONG_MAX ? (index+1) : index) > xa_max_index(xa->xa_levels)) {
+    while ((index != ULONG_MAX ? (index + 1) : index) >
+           xa_max_index(xa->xa_levels)) {
         if (xa_increase_level(xa))
             return NULL;
     }
@@ -79,7 +80,7 @@ struct xa_node *xa_get_leaf_by_index(struct xarray *xa,
 }
 
 struct xa_node *xa_find_leaf_by_index(struct xarray *xa,
-                                     const unsigned long index)
+                                      const unsigned long index)
 {
     uint8_t i;
     void **slot;
@@ -100,7 +101,7 @@ struct xa_node *xa_find_leaf_by_index(struct xarray *xa,
     return xa_parent;
 }
 
-void* xa_store(struct xarray *xa, unsigned long index, void *item)
+void *xa_store(struct xarray *xa, unsigned long index, void *item)
 {
     struct xa_node *node = xa_get_leaf_by_index(xa, index);
     void **slot;
@@ -140,13 +141,13 @@ void *xa_load(struct xarray *xa, unsigned long index)
 
     if (!node)
         return_val_err(XA_FAILED, ENOENT);
-    
+
     slot = &node->xa_slots[index & XA_MASK];
     return *slot;
 }
 
 static void xa_free_level(struct xarray *xa, unsigned level,
-                                struct xa_node *node)
+                          struct xa_node *node)
 {
     if (!node)
         return;
@@ -161,10 +162,7 @@ static void xa_free_level(struct xarray *xa, unsigned level,
     }
 }
 
-void xa_destroy(struct xarray *xa)
-{
-    xa_free_level(xa, 0, xa->xa_slot);
-}
+void xa_destroy(struct xarray *xa) { xa_free_level(xa, 0, xa->xa_slot); }
 
 unsigned long xa_size(const struct xarray *xa)
 {
@@ -175,31 +173,35 @@ unsigned long xa_size(const struct xarray *xa)
     return 0;
 }
 
-static void xa_release_level(struct xarray *xa, uint8_t level, struct xa_node *node)
+static void xa_release_level(struct xarray *xa, uint8_t level,
+                             struct xa_node *node)
 {
+    uint8_t i;
+
     if (!node)
         return;
 
-    if (level < xa->xa_levels) {
-        uint8_t i;
+    if (level == xa->xa_levels)
+        return;
+
+    // assert(node->xa_shift == (1ul << ((xa->xa_levels - level) * XA_BITS)));
+
+    if (level + 1 < xa->xa_levels) {
         for (i = 0; i < XA_SLOT_MAX; ++i) {
             xa_release_level(xa, level + 1, node->xa_slots[i]);
         }
+    }
 
-        if (node->xa_count == 0) {
-            xa->xa_node_num--;
-            if (node->xa_parent) {
-                node->xa_parent->xa_slots[node->xa_offset] = NULL;
-                node->xa_parent->xa_count--;
-            } else {
-                xa->xa_slot = NULL;
-            }
-            free(node);
+    if (node->xa_count == 0) {
+        xa->xa_node_num--;
+        if (node->xa_parent) {
+            node->xa_parent->xa_slots[node->xa_offset] = NULL;
+            node->xa_parent->xa_count--;
+        } else {
+            xa->xa_slot = NULL;
         }
+        free(node);
     }
 }
 
-void xa_release(struct xarray *xa)
-{
-    xa_release_level(xa, 0, xa->xa_slot);
-}
+void xa_release(struct xarray *xa) { xa_release_level(xa, 0, xa->xa_slot); }
