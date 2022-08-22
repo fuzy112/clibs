@@ -205,3 +205,57 @@ static void xa_release_level(struct xarray *xa, uint8_t level,
 }
 
 void xa_release(struct xarray *xa) { xa_release_level(xa, 0, xa->xa_slot); }
+
+void *xa_find(struct xarray *xa, unsigned long *indexp, unsigned long last)
+{
+    void *slot = xa->xa_slot;
+    unsigned long index = *indexp;
+
+    for (;;) {
+        struct xa_node *node;
+
+        if (slot == NULL)
+            break;
+
+        node = slot;
+
+        while (index <= last) {
+            slot = node->xa_slots[(index >> node->xa_shift) & XA_MASK];
+
+            if (slot)
+                break;
+            index += 1ul << node->xa_shift;
+
+            if (((index >> node->xa_shift) & XA_MASK) == 0)
+                break;
+        }
+
+        if (slot) {
+            if (node->xa_shift == 0) {
+                *indexp = index;
+                return slot;
+            }
+        } else if (index > last) {
+            return NULL;
+        } else {
+            slot = node->xa_parent;
+        }
+    }
+
+    return NULL;
+}
+
+void *xa_find_after(struct xarray *xa, unsigned long *indexp,
+                    unsigned long last)
+{
+    void *ret;
+    unsigned long index = *indexp + 1;
+
+    if (index > last)
+        return NULL;
+
+    ret = xa_find(xa, &index, last);
+    if (ret)
+        *indexp = index;
+    return ret;
+}

@@ -55,4 +55,16 @@ void xa_release(struct xarray *xa);
 struct xa_node *xa_get_node_by_index(struct xarray *xa, unsigned long index);
 struct xa_node *xa_find_node_by_index(struct xarray *xa, unsigned long index);
 
+void *xa_find(struct xarray *xa, unsigned long *indexp, unsigned long last);
+
+void *xa_find_after(struct xarray *xa, unsigned long *indexp,
+                    unsigned long last);
+
+#define xa_for_each_range(xa, index, value, start, end)                        \
+    for ((index) = (start), (value) = xa_find((xa), &(index), (end));          \
+         (value) != NULL; (value) = xa_find_after((xa), &(index), (end)))
+
+#define xa_for_each(xa, index, value)                                          \
+    xa_for_each_range(xa, index, value, 0, ULONG_MAX)
+
 #endif // XARRAY_H

@@ -1,12 +1,13 @@
 #include "xarray.h"
 #include <stdio.h>
 #include <limits.h>
+#include <assert.h>
 
 int main()
 {
     unsigned long i;
     struct xarray xa = XA_INIT;
-    // void *v;
+    void *v;
 
 
     for (i = 0; i < 100; ++i) {
@@ -15,10 +16,11 @@ int main()
         }
     }
 
-    for (i = 0; i < 1000; ++i) {
-        if (xa_load(&xa, i)) {
-            printf("set %li\n", i);
-        }
+    xa_for_each (&xa, i, v) {
+        assert(v != 0);
+        assert(i <= 1000);
+        assert(xa_load(&xa, i) == v);
+        printf("%lu = %p\n", i, v);
     }
 
     i = 0;
