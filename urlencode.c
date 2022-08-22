@@ -4,11 +4,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-static bool is_unreserved(int ch)
+__attribute_const__ static bool is_unreserved(int ch)
 {
     return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
            (ch >= '0' && ch <= '9') || (ch == '-') || (ch == '_') ||
            (ch == '.') || (ch == '~');
+}
+
+__attribute_const__ static bool is_reserved(int ch)
+{
+    return ch == '!' || ch == '#' || ch == '$' || ch == '&' || ch == '\'' ||
+           ch == '(' || ch == ')' || ch == '*' || ch == '+' || ch == ',' ||
+           ch == '/' || ch == ':' || ch == ';' || ch == '=' || ch == '?' ||
+           ch == '@' || ch == '[' || ch == ']';
 }
 
 static const char xdigits[16] = {
@@ -18,7 +26,7 @@ static const char xdigits[16] = {
     [0xC] = 'C', [0xD] = 'D', [0xE] = 'E', [0xF] = 'F',
 };
 
-char *urlencode(const char *url)
+char *urlencode(const char *url, int flags)
 {
     char *encoded;
     const char *p;
@@ -39,9 +47,11 @@ char *urlencode(const char *url)
         return NULL;
 
     for (p = url, i = 0; *p != '\0'; ++p) {
-        int ch = (unsigned char)*p;
+        int ch = *p;
 
         if (is_unreserved(ch)) {
+            encoded[i++] = ch;
+        } else if ((flags & URLENCODE_NO_RESV) && is_reserved(ch)) {
             encoded[i++] = ch;
         } else {
             encoded[i++] = '%';
