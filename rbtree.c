@@ -84,7 +84,7 @@ static void rb_rotate_left(struct rb_node *x, struct rb_root *tree)
 
 struct rb_node *rb_first(const struct rb_root *tree)
 {
-    return tree->rb_node ? rb_min(tree->rb_node) : (struct rb_node *)tree;
+    return rb_min(tree->rb_node);
 }
 
 struct rb_node *rb_last(const struct rb_root *tree)

@@ -82,44 +82,6 @@ static inline struct rb_node *rb_next_safe(const struct rb_node *n,
 
 #define rb_entry(ptr, type, member) container_of(ptr, type, member)
 
-#ifdef __GNUC__
-#define rb_entry_safe(ptr, type, member)                                       \
-    ({                                                                         \
-        typeof(ptr) _rb_ptr = ptr;                                             \
-        _rb_ptr ? rb_entry(_rb_ptr, type, member) : NULL;                      \
-    })
-#else
-static inline void *__rb_entry_safe(void *ptr, ptrdiff_t offset)
-{
-    return ptr ? (char *)ptr - offset : NULL;
-}
-#define rb_entry_safe(ptr, type, member)                                       \
-    ((type *)__rb_entry_safe((void *)(ptr), offsetof(type, member)))
-#endif
-
-#define rb_first_entry(tree, type, member)                                     \
-    rb_entry(rb_first((tree)), type, member)
-
-#define rb_last_entry(tree, type, member)                                      \
-    rb_entry(rb_last((tree)), type, member)
-
-#define rb_next_entry(pos, member)                                             \
-    rb_entry(rb_next(&(pos)->member), typeof(*pos), member)
-
-#define rb_next_entry_safe(pos, tree, member)                                  \
-    rb_entry_safe(rb_next_safe(&(pos)->member, (tree)), typeof(*pos), member)
-
-#define rb_for_each_entry(pos, tree, member)                                   \
-    for ((pos) = rb_first_entry((tree), typeof(*pos), member);                 \
-         &(pos)->member != NULL;                                     \
-         (pos) = rb_next_entry((pos), member))
-
-#define rb_for_each_entry_safe(pos, n, tree, member)                           \
-    for ((pos) = rb_first_entry((tree), typeof(*pos), member),                 \
-        (n) = rb_next_entry_safe((pos), (tree), member);                       \
-         &(pos)->member != NULL;                                     \
-         (pos) = (n), (n) = rb_next_entry_safe((pos), (tree), member))
-
 #if __STDC_VERSION__ >= 199901L || __cplusplus
 
 #define rb_for_each_init(pos, tree)                                            \
@@ -131,16 +93,6 @@ static inline void *__rb_entry_safe(void *ptr, ptrdiff_t offset)
                         *_rb_next = rb_next_safe((pos), (tree));               \
          pos != NULL;                                                \
          (pos) = _rb_next, _rb_next = rb_next_safe((pos), (tree)))
-
-#define rb_for_each_entry_init(type, pos, tree, member)                        \
-    for (type *pos = rb_first_entry((tree), type, member);                     \
-         &pos->member != NULL; pos = rb_next_entry(pos, member))
-
-#define rb_for_each_entry_safe_init(type, pos, tree, member)                   \
-    for (type *pos = rb_first_entry((tree), type, member),                     \
-              *_rb_next = rb_next_entry_safe(pos, (tree), member);             \
-         &pos->member != NULL;                                       \
-         pos = _rb_next, _rb_next = rb_next_entry_safe(pos, (tree), member))
 
 #endif
 

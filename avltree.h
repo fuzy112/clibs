@@ -34,14 +34,6 @@ extern "C" {
     ((type *)((char *)ptr - offsetof(type, member)))
 #endif
 
-#ifndef __may_alias
-#if defined(_MSC_VER) && !defined(__clang__)
-#define __may_alias
-#else
-#define __may_alias __attribute__((__may_alias__))
-#endif
-#endif
-
 struct avl_node {
     struct avl_node *avl_left;
     struct avl_node *avl_right;
@@ -49,7 +41,7 @@ struct avl_node {
     int_fast8_t avl_balance;
 };
 
-struct __may_alias avl_root {
+struct avl_root {
     struct avl_node *avl_node;
 };
 
@@ -62,7 +54,7 @@ static inline void avl_root_init(struct avl_root *tree)
     tree->avl_node = NULL;
 }
 
-#define avl_end(tree) ((struct avl_node *)tree)
+#define avl_end(tree) ((struct avl_node *)NULL)
 struct avl_node *avl_first(const struct avl_root *tree);
 struct avl_node *avl_last(const struct avl_root *tree);
 struct avl_node *avl_max(const struct avl_node *x);
@@ -82,75 +74,25 @@ static inline struct avl_node *avl_next_safe(const struct avl_node *n,
 }
 
 #define avl_for_each(pos, tree)                                                \
-    for ((pos) = avl_first((tree)); (pos) != avl_end((tree));                  \
-         (pos) = avl_next((pos)))
+    for ((pos) = avl_first((tree)); (pos) != NULL; (pos) = avl_next((pos)))
 
 #define avl_for_each_safe(pos, n, tree)                                        \
     for ((pos) = avl_first((tree)), (n) = avl_next_safe((pos), (tree));        \
-         (pos) != avl_end((tree));                                             \
-         (pos) = (n), (n) = avl_next_safe((pos), (tree)))
+         (pos) != NULL; (pos) = (n), (n) = avl_next_safe((pos), (tree)))
 
 #define avl_entry(ptr, type, member) container_of(ptr, type, member)
-
-#ifdef __GNUC__
-#define avl_entry_safe(ptr, type, member)                                      \
-    ({                                                                         \
-        typeof(ptr) _avl_ptr = ptr;                                            \
-        _avl_ptr ? avl_entry(_avl_ptr, type, member) : NULL;                   \
-    })
-#else
-static inline void *__avl_entry_safe(void *ptr, ptrdiff_t offset)
-{
-    return ptr ? (char *)ptr - offset : NULL;
-}
-#define avl_entry_safe(ptr, type, member)                                      \
-    ((type *)__avl_entry_safe((void *)(ptr), offsetof(type, member)))
-#endif
-
-#define avl_first_entry(tree, type, member)                                    \
-    avl_entry(avl_first((tree)), type, member)
-
-#define avl_last_entry(tree, type, member)                                     \
-    avl_entry(avl_last((tree)), type, member)
-
-#define avl_next_entry(pos, member)                                            \
-    avl_entry(avl_next(&(pos)->member), typeof(*pos), member)
-
-#define avl_next_entry_safe(pos, tree, member)                                 \
-    avl_entry_safe(avl_next_safe(&(pos)->member, (tree)), typeof(*pos), member)
-
-#define avl_for_each_entry(pos, tree, member)                                  \
-    for ((pos) = avl_first_entry((tree), typeof(*pos), member);                \
-         &(pos)->member != avl_end((tree));                                    \
-         (pos) = avl_next_entry((pos), member))
-
-#define avl_for_each_entry_safe(pos, n, tree, member)                          \
-    for ((pos) = avl_first_entry((tree), typeof(*pos), member),                \
-        (n) = avl_next_entry_safe((pos), (tree), member);                      \
-         &(pos)->member != avl_end((tree));                                    \
-         (pos) = (n), (n) = avl_next_entry_safe((pos), (tree), member))
 
 #if __STDC_VERSION__ >= 199901L || __cplusplus
 
 #define avl_for_each_init(pos, tree)                                           \
-    for (struct avl_node *pos = avl_first((tree)); pos != avl_end((tree));     \
+    for (struct avl_node *pos = avl_first((tree)); pos != NULL;                \
          pos = avl_next((pos)))
 
 #define avl_for_each_safe_init(pos, tree)                                      \
     for (struct avl_node *pos = avl_first((tree)),                             \
                          *_avl_next = avl_next_safe((pos), (tree));            \
-         pos != avl_end((tree));                                               \
+         pos != NULL;                                                          \
          (pos) = _avl_next, _avl_next = avl_next_safe((pos), (tree)))
-
-#define avl_for_each_entry_init(type, pos, tree, member)                       \
-    for (type *pos = avl_first_entry((tree), type, member);                    \
-         &pos->member != avl_end((tree)); pos = avl_next_entry(pos, member))
-
-#define avl_for_each_entry_safe_init(type, pos, tree, member)                  \
-    for (type *pos = avl_first_entry((tree), type, member),                    \
-              *_avl_next = avl_next_entry_safe(pos, (tree), member);           \
-         &pos->member != avl_end((tree)); pos = _avl_next,                     \
-              _avl_next = avl_next_entry_safe(pos, (tree), member))
 
 #endif
 
