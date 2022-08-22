@@ -78,8 +78,8 @@ static inline unsigned circ_space_to_end(struct circbuf *circ)
     return n <= end ? n : end + 1;
 }
 
-void circ_prepare(struct circbuf *circ, struct iovec *iovecs, unsigned *nr_vecs)
-    __attribute_nonnull__((1, 2, 3));
+void circ_prepare(struct circbuf *circ, struct iovec *iovecs,
+                  unsigned *nr_vecs);
 
 static inline void circ_commit(struct circbuf *circ, unsigned n)
 {
@@ -87,8 +87,7 @@ static inline void circ_commit(struct circbuf *circ, unsigned n)
     circ->tail += n;
 }
 
-void circ_data(struct circbuf *circ, struct iovec *iovecs, unsigned *nr_vecs)
-    __attribute_nonnull__((1, 2, 3));
+void circ_data(struct circbuf *circ, struct iovec *iovecs, unsigned *nr_vecs);
 
 static inline void circ_consume(struct circbuf *circ, unsigned n)
 {
@@ -97,7 +96,7 @@ static inline void circ_consume(struct circbuf *circ, unsigned n)
 }
 
 int circ_read(struct circbuf *circ, void *__restrict buf, unsigned size,
-              unsigned *off) __attribute_nonnull__((1, 2, 4));
+              unsigned *off);
 
 static inline int circ_read_u8(struct circbuf *circ, uint8_t *__restrict buf,
                                unsigned *off)
@@ -154,7 +153,7 @@ static inline int circ_read_le32(struct circbuf *circ, uint32_t *__restrict buf,
 }
 
 int circ_write(struct circbuf *circ, const void *__restrict buf, unsigned size,
-               unsigned *off) __attribute_nonnull__((1, 2, 4));
+               unsigned *off);
 
 static inline int circ_write_u8(struct circbuf *circ, unsigned value,
                                 unsigned *off)
