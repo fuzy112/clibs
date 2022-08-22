@@ -114,7 +114,7 @@ static int update_value(struct dict *dict, struct dict_entry *entry,
 
 int dict_set(struct dict *dict, const char *key, const void *value)
 {
-    struct rb_node *parent = rb_end(&dict->dict_tree);
+    struct rb_node *parent = NULL;
     struct rb_node **link = &dict->dict_tree.rb_node;
     int c;
     struct dict_entry *entry;
