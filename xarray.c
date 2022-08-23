@@ -27,8 +27,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-static inline uint8_t __attribute_pure__
-xa_slot_index(uint8_t shift, unsigned long index)
+static inline uint8_t __attribute_pure__ xa_slot_index(uint8_t shift,
+                                                       unsigned long index)
 {
     return (uint8_t)(index >> shift) & XA_MASK;
 }
@@ -43,9 +43,9 @@ static inline unsigned long __attribute_pure__ xa_max_index(uint8_t levels)
 static struct xa_node *xa_alloc_node(struct xarray *xa)
 {
     struct xa_node *node = (struct xa_node *)calloc(1, sizeof(*node));
-    if (node) {
-        xa->xa_node_num++;
-    }
+    if (!node)
+        return_null_err(ENOMEM);
+    xa->xa_node_num++;
     return node;
 }
 
@@ -60,7 +60,7 @@ static int xa_increase_level(struct xarray *xa)
     struct xa_node *node = xa_alloc_node(xa);
     struct xa_node *old_root;
     if (!node)
-        return -ENOMEM;
+        return -1;
 
     old_root = node->xa_slots[0] = xa->xa_slot;
     if (old_root) {
@@ -107,6 +107,35 @@ struct xa_node *xa_get_leaf_by_index(struct xarray *xa,
     }
 
     return xa_parent;
+}
+
+struct xa_node *xa_get_leaf_with_space_by_index(struct xarray *xa,
+                                                unsigned long *indexp,
+                                                unsigned long last)
+{
+    struct xa_node *node;
+    unsigned long index = *indexp;
+
+    node = xa_get_leaf_by_index(xa, index);
+
+    while (index <= last) {
+
+        if (!node)
+            return NULL;
+
+        if (node->xa_slots[index & XA_MASK]) {
+            index++;
+
+            if (xa_slot_index(node->xa_shift, index) == 0)
+                node = xa_get_leaf_by_index(xa, index);
+
+        } else {
+            *indexp = index;
+            return node;
+        }
+    }
+
+    return_null_err(EBUSY);
 }
 
 const struct xa_node *xa_find_leaf_by_index(const struct xarray *xa,
@@ -296,4 +325,20 @@ void *xa_find_after(struct xarray *xa, unsigned long *indexp,
     if (ret)
         *indexp = index;
     return ret;
+}
+
+int xa_insert(struct xarray *xa, unsigned long *indexp, void *item,
+              unsigned long last)
+{
+    struct xa_node *node = xa_get_leaf_with_space_by_index(xa, indexp, last);
+    if (!node)
+        return -1;
+
+    node->xa_slots[(*indexp) & XA_MASK] = item;
+    node->xa_count++;
+    while (node) {
+        node->xa_values++;
+        node = node->xa_parent;
+    }
+    return 0;
 }
