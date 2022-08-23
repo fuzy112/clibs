@@ -50,4 +50,6 @@ int main()
     xa_destroy(&xa);
 
     printf("success\n");
+
+    return 0;
 }

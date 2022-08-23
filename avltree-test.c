@@ -30,10 +30,11 @@ int main()
 {
     struct avl_root tree = AVL_ROOT_INIT;
     struct avl_node *iter, *n;
+    int i;
 
     srand(time(NULL));
 
-    for (int i = 0; i < 2000; ++i) {
+    for (i = 0; i < 2000; ++i) {
         struct my_node *n = (struct my_node *)malloc(sizeof(*n));
         n->value = rand() * rand();
         add_my_node(n, &tree);
@@ -57,4 +58,6 @@ int main()
         avl_erase(iter, &tree);
         free(entry);
     }
+
+    return 0;
 }
