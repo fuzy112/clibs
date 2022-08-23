@@ -5,3 +5,8 @@
 *.dll
 *.so
 *.dylib
+*.patch
+*.diff
+*.reject
+*.tmp
+.vscode/
