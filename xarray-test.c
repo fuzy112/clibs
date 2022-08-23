@@ -36,16 +36,12 @@ int main()
     printf("levels: %u\n", xa.xa_levels);
     printf("num_nodes: %lu\n",xa.xa_node_num);
 
-    xa_erase(&xa, 0);
+    xa_erase(&xa, i);
     xa_release(&xa);
 
     printf("size: %lu\n", xa_size(&xa));
     printf("levels: %u\n", xa.xa_levels);
     printf("num_nodes: %lu\n",xa.xa_node_num);
-
-    // xa_for_each (&xa, i, v) {
-    //     printf("xa[%li] = %p\n", i, v);
-    // }
 
     xa_destroy(&xa);
 
