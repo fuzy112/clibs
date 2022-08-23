@@ -268,11 +268,15 @@ void xa_release(struct xarray *xa)
 
     while (node->xa_shift != 0 && node->xa_count == 1 &&
            node->xa_slots[0] != NULL) {
-        xa->xa_slot = node->xa_slots[0];
-        free(node);
+        node = node->xa_slots[0];
+        assert(node != xa->xa_slot);
+        free(xa->xa_slot);
+        xa->xa_slot = node;
         xa->xa_node_num--;
         xa->xa_levels--;
-        node = xa->xa_slot;
+        if (node) {
+            node->xa_parent = NULL;
+        }
     }
 }
 
