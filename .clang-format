@@ -1,12 +1,21 @@
-#
-# .clang-format
-# ~~~~~~~~~~~~~
-#
-# Copyright (c) 2022 Zhengyi Fu (tsingyat at outlook dot com)
-#
-# Distributed under the Boost Software License, Version 1.0. (See accompanying
-# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#
+# CMakeLists.txt
+# 
+# Copyright 2022 Zhengyi Fu <tsingyat@outlook.com>
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# 
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 ---
 BasedOnStyle: LLVM
@@ -15,55 +24,55 @@ BreakBeforeBraces: Linux
 IndentWidth: 4
 
 ForEachMacros:
-  - avl_for_each
-  - avl_for_each_safe
-  - avl_for_each_entry
-  - avl_for_each_entry_safe
-  - avl_for_each_init
-  - avl_for_each_safe_init
-  - avl_for_each_entry_init
-  - avl_for_each_entry_safe_init
+- avl_for_each
+- avl_for_each_safe
+- avl_for_each_entry
+- avl_for_each_entry_safe
+- avl_for_each_init
+- avl_for_each_safe_init
+- avl_for_each_entry_init
+- avl_for_each_entry_safe_init
 
-  - rb_for_each
-  - rb_for_each_safe
-  - rb_for_each_entry
-  - rb_for_each_entry_safe
-  - rb_for_each_init
-  - rb_for_each_safe_init
-  - rb_for_each_entry_init
-  - rb_for_each_entry_safe_init
+- rb_for_each
+- rb_for_each_safe
+- rb_for_each_entry
+- rb_for_each_entry_safe
+- rb_for_each_init
+- rb_for_each_safe_init
+- rb_for_each_entry_init
+- rb_for_each_entry_safe_init
 
-  - list_for_each
-  - list_for_each_continue
-  - list_for_each_prev
-  - list_for_each_safe
-  - list_for_each_prev_safe
-  - list_for_each_entry
-  - list_for_each_entry_reverse
-  - list_for_each_entry_continue
-  - list_for_each_entry_continue_reverse
-  - list_for_each_entry_from
-  - list_for_each_entry_from_reverse
-  - list_for_each_entry_safe
-  - list_for_each_entry_safe_continue
-  - list_for_each_entry_safe_from
-  - list_for_each_entry_safe_reverse
-  - hlist_for_each
-  - hlist_for_each_safe
-  - hlist_for_each_entry
-  - hlist_for_each_entry_continue
-  - hlist_for_each_entry_from
-  - hlist_for_each_entry_safe
-  
-  - xa_for_each
+- list_for_each
+- list_for_each_continue
+- list_for_each_prev
+- list_for_each_safe
+- list_for_each_prev_safe
+- list_for_each_entry
+- list_for_each_entry_reverse
+- list_for_each_entry_continue
+- list_for_each_entry_continue_reverse
+- list_for_each_entry_from
+- list_for_each_entry_from_reverse
+- list_for_each_entry_safe
+- list_for_each_entry_safe_continue
+- list_for_each_entry_safe_from
+- list_for_each_entry_safe_reverse
+- hlist_for_each
+- hlist_for_each_safe
+- hlist_for_each_entry
+- hlist_for_each_entry_continue
+- hlist_for_each_entry_from
+- hlist_for_each_entry_safe
 
-  - splay_for_each
-  - splay_for_each_safe
-  - splay_for_each_entry
-  - splay_for_each_entry_safe
-  - splay_for_each_init
-  - splay_for_each_safe_init
-  - splay_for_each_entry_init
-  - splay_for_each_entry_safe_init
+- xa_for_each
+
+- splay_for_each
+- splay_for_each_safe
+- splay_for_each_entry
+- splay_for_each_entry_safe
+- splay_for_each_init
+- splay_for_each_safe_init
+- splay_for_each_entry_init
+- splay_for_each_entry_safe_init
 
 # vim:set filetype=yaml:
