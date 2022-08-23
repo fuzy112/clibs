@@ -15,7 +15,7 @@ EXE=
 targets := avltree-test rbtree-test tree-benchmark \
 	avl2dot rb2dot genrnd list-test \
     splay2dot xarray-test urlencode-test \
-	circbuf-test
+	circbuf-test hashtable-test
 
 all: $(targets:%=%$(EXE))
 
@@ -43,6 +43,8 @@ xarray-test$(EXE): xarray-test.o xarray.o
 genrnd$(EXE): genrnd.o
 
 urlencode-test$(EXE): urlencode-test.o urlencode.o
+
+hashtable-test$(EXE): hashtable-test.o
 
 .PHONY: clean
 clean:

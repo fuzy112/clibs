@@ -64,6 +64,15 @@ ForEachMacros:
 - hlist_for_each_entry_from
 - hlist_for_each_entry_safe
 
+- htable_for_each_possible
+- htable_for_each_possible_safe
+- htable_for_each_possible_entry
+- htable_for_each_possible_entry_safe
+- htable_for_each
+- htable_for_each_safe
+- htable_for_each_entry
+- htable_for_each_entry_safe
+
 - xa_for_each
 
 - splay_for_each
