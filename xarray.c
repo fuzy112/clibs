@@ -167,7 +167,7 @@ void *xa_store(struct xarray *xa, unsigned long index, void *item)
     void *old_value;
 
     if (!node)
-        return_val_err(XA_FAILED, ENOMEM);
+        return_val_err(item ? XA_FAILED : NULL, ENOMEM);
 
     slot = &node->xa_slots[index & XA_MASK];
 

@@ -11,7 +11,7 @@ int main()
 
 
     for (i = 0; i < 100; ++i) {
-        if (xa_store(&xa, i*10, &i)) {
+        if (xa_store(&xa, i*10, &i) == XA_FAILED) {
             printf("failed to insert %li\n", i*10);
         }
     }
@@ -24,12 +24,12 @@ int main()
     }
 
     i = 0;
-    if (xa_store(&xa, i, &i)) {
+    if (xa_store(&xa, i, &i) == XA_FAILED) {
         perror("failed to insert 0");
     }
 
     i = 0xffffffff;
-    if (xa_store(&xa, i, &i)) {
+    if (xa_store(&xa, i, &i) == XA_FAILED) {
         printf("failed to insert %li\n", i*1000);
     }
     printf("size: %lu\n", xa_size(&xa));

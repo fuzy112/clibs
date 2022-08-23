@@ -26,20 +26,20 @@
 
 struct xarray {
     void *xa_slot;
-    unsigned long xa_node_num;
-    uint8_t xa_levels;
+    long xa_node_num;
+    int8_t xa_levels;
 };
 
 #define XA_BITS (sizeof(void *) == 8 ? 6 : 4)
-#define XA_SLOT_MAX (1lu << XA_BITS)
+#define XA_SLOT_MAX (1 << XA_BITS)
 #define XA_MASK (XA_SLOT_MAX - 1)
 
 #define XA_INDEX_MAX ((unsigned long)-1)
 
 struct xa_node {
-    uint8_t xa_shift;
-    uint8_t xa_offset;
-    uint8_t xa_count;        /* non null xa_slots */
+    int8_t xa_shift;
+    int8_t xa_offset;
+    int8_t xa_count;         /* non null xa_slots */
     unsigned long xa_values; /* values in subtree */
     struct xa_node *xa_parent;
     void *xa_slots[XA_SLOT_MAX];
