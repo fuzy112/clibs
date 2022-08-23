@@ -2,7 +2,7 @@ OPTS ?=
 
 CFLAGS += -MMD -MP -g -Wall -Werror $(OPTS) -std=gnu89
 
-CXXFLAGS += -MMD -MP -g -Wno-invalid-offsetof -Wall -Werror $(OPTS)
+CXXFLAGS += -O3 -MMD -MP -g -Wno-invalid-offsetof -Wall  $(OPTS) -Wno-permissive -fpermissive 
 
 LDFLAGS += $(OPTS)
 
