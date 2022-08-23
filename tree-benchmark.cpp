@@ -1,7 +1,7 @@
 #include "avltree.c"
+#include "hashtable.h"
 #include "rbtree.c"
 #include "splay.c"
-#include "hashtable.h"
 #include "xarray.c"
 #include <type_traits>
 
@@ -265,12 +265,12 @@ struct entry_htable {
     struct hlist_node node;
 };
 
-static HASHTABLE(hashtable, 24);
+static HASHTABLE(hashtable, 19);
 
 static void benchmark_htable(size_t nr_entries,
-                          prepare_sample_func_t prepare_sample)
+                             prepare_sample_func_t prepare_sample)
 {
-    
+
     struct entry_htable *entries = new entry_htable[nr_entries];
     if (!entries)
         die("calloc");
@@ -290,9 +290,12 @@ static void benchmark_htable(size_t nr_entries,
 
     for (size_t i = 0; i < nr_entries; ++i) {
         for (int j = 0; j < 5; ++j)
-            htable_for_each_possible_entry(hashtable, entries[i].value, pos, node)
-                if (pos->value == entries[i].value)
-                    {search_result = pos; break;}
+            htable_for_each_possible_entry (hashtable, entries[i].value, pos,
+                                            node)
+                if (pos->value == entries[i].value) {
+                    search_result = pos;
+                    break;
+                }
     }
 
     unsigned i;
@@ -308,6 +311,51 @@ static void benchmark_htable(size_t nr_entries,
     print_result("hashtable", nr_entries, t0, t1, t2);
 }
 
+static struct rb_root hashtable_rb[1 << 18] = {RB_ROOT_INIT};
+
+static void benchmark_htable_rb(size_t nr_entries,
+                                prepare_sample_func_t prepare_sample)
+{
+
+    struct entry_rb *entries = new entry_rb[nr_entries];
+    if (!entries)
+        die("calloc");
+
+    prepare_sample(nr_entries, sizeof(struct entry_rb),
+                   offsetof(struct entry_rb, value), entries);
+
+    uint64_t t0 = get_time();
+
+    for (size_t i = 0; i < nr_entries; ++i) {
+        struct entry_rb *entry = &entries[i];
+        insert_rb(entry, htable_bucket_head(hashtable_rb, entry->value));
+    }
+
+    uint64_t t1 = get_time();
+    struct entry_htable *pos;
+
+    for (size_t i = 0; i < nr_entries; ++i) {
+        for (int j = 0; j < 5; ++j) {
+            struct rb_root *bucket =
+                htable_bucket_head(hashtable_rb, entries[i].value);
+            search_result = search_rb(entries[i].value, bucket);
+        }
+    }
+
+    unsigned i;
+    struct rb_node *iter, *n;
+    for (i = 0; i < HASHTABLE_SIZE(hashtable_rb); ++i) {
+        rb_for_each_safe (iter, n, &hashtable_rb[i]) {
+            rb_erase(iter, &hashtable_rb[i]);
+        }
+    }
+
+    uint64_t t2 = get_time();
+
+    delete[] entries;
+
+    print_result("hashtable-rb", nr_entries, t0, t1, t2);
+}
 
 struct entry_splay {
     int value;
@@ -439,7 +487,7 @@ struct entry_xa {
 };
 
 static void benchmark_xarray(size_t nr_entries,
-                          prepare_sample_func_t prepare_sample)
+                             prepare_sample_func_t prepare_sample)
 {
     struct xarray xa = XA_INIT;
     struct entry_xa *entries = new entry_xa[nr_entries];
@@ -482,15 +530,13 @@ struct benchmark {
 };
 
 static const struct benchmark benchmarks[] = {
-    {"rbtree", benchmark_rb},
-    {"avltree", benchmark_avl},
-    {"hashtable", benchmark_htable},
+    {"rbtree", benchmark_rb},        {"avltree", benchmark_avl},
+    {"hashtable", benchmark_htable}, {"hashtable-rb", benchmark_htable_rb},
     {"splay", benchmark_splay},
 #ifdef ENABLE_BOOST
     {"boost-rbtree", benchmark_irb},
 #endif
-    {"xarray", benchmark_xarray},
-    {},
+    {"xarray", benchmark_xarray},    {},
 };
 
 static void usage(FILE *out, const char *program)
