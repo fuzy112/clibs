@@ -22,18 +22,21 @@
 #include "error.h"
 #include <assert.h>
 #include <errno.h>
-#include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 
-#define xa_slot_index(shift, index) ((index >> shift) & XA_MASK)
+static inline uint8_t __attribute_pure__
+xa_slot_index(uint8_t shift, unsigned long index)
+{
+    return (uint8_t)(index >> shift) & XA_MASK;
+}
 
-static unsigned long xa_max_index(uint8_t levels)
+static inline unsigned long __attribute_pure__ xa_max_index(uint8_t levels)
 {
     if (levels * XA_BITS > 8 * sizeof(unsigned long))
-        return ULONG_MAX;
+        return XA_INDEX_MAX;
     return ((1lu << (XA_BITS * (levels))) - 1lu);
 }
 
@@ -44,6 +47,12 @@ static struct xa_node *xa_alloc_node(struct xarray *xa)
         xa->xa_node_num++;
     }
     return node;
+}
+
+static inline bool xa_is_leaf(const struct xa_node *node)
+{
+    assert(node);
+    return node->xa_shift == 0;
 }
 
 static int xa_increase_level(struct xarray *xa)
@@ -73,7 +82,7 @@ struct xa_node *xa_get_leaf_by_index(struct xarray *xa,
     void **slot;
     struct xa_node *xa_parent = NULL;
 
-    while ((index != ULONG_MAX ? (index + 1) : index) >
+    while ((index != XA_INDEX_MAX ? (index + 1) : index) >
            xa_max_index(xa->xa_levels)) {
         if (xa_increase_level(xa))
             return NULL;
@@ -100,12 +109,12 @@ struct xa_node *xa_get_leaf_by_index(struct xarray *xa,
     return xa_parent;
 }
 
-struct xa_node *xa_find_leaf_by_index(struct xarray *xa,
-                                      const unsigned long index)
+const struct xa_node *xa_find_leaf_by_index(const struct xarray *xa,
+                                            const unsigned long index)
 {
     uint8_t i;
-    void **slot;
-    struct xa_node *xa_parent = NULL;
+    void *const *slot;
+    const struct xa_node *xa_parent = NULL;
 
     if (index + 1 > xa_max_index(xa->xa_levels))
         return NULL;
@@ -152,19 +161,16 @@ void *xa_store(struct xarray *xa, unsigned long index, void *item)
             node = node->xa_parent;
         }
     }
-    return 0;
+    return old_value;
 }
 
-void *xa_load(struct xarray *xa, unsigned long index)
+void *xa_load(const struct xarray *xa, unsigned long index)
 {
-    void **slot;
-    struct xa_node *node = xa_find_leaf_by_index(xa, index);
+    const struct xa_node *node = xa_find_leaf_by_index(xa, index);
 
     if (!node)
-        return_val_err(XA_FAILED, ENOENT);
-
-    slot = &node->xa_slots[index & XA_MASK];
-    return *slot;
+        return NULL;
+    return node->xa_slots[index & XA_MASK];
 }
 
 static void xa_free_level(struct xarray *xa, unsigned level,
@@ -205,8 +211,6 @@ static void xa_release_level(struct xarray *xa, uint8_t level,
     if (level == xa->xa_levels)
         return;
 
-    // assert(node->xa_shift == (1ul << ((xa->xa_levels - level) * XA_BITS)));
-
     if (level + 1 < xa->xa_levels) {
         for (i = 0; i < XA_SLOT_MAX; ++i) {
             xa_release_level(xa, level + 1, node->xa_slots[i]);
@@ -225,41 +229,53 @@ static void xa_release_level(struct xarray *xa, uint8_t level,
     }
 }
 
-void xa_release(struct xarray *xa) { xa_release_level(xa, 0, xa->xa_slot); }
+void xa_release(struct xarray *xa)
+{
+    xa_release_level(xa, 0, xa->xa_slot);
+
+    struct xa_node *node = xa->xa_slot;
+    if (!node)
+        return;
+
+    while (node->xa_shift != 0 && node->xa_count == 1 &&
+           node->xa_slots[0] != NULL) {
+        xa->xa_slot = node->xa_slots[0];
+        free(node);
+        xa->xa_node_num--;
+        xa->xa_levels--;
+        node = xa->xa_slot;
+    }
+}
 
 void *xa_find(struct xarray *xa, unsigned long *indexp, unsigned long last)
 {
-    void *slot = xa->xa_slot;
     unsigned long index = *indexp;
+    struct xa_node *node = xa->xa_slot;
 
-    for (;;) {
-        struct xa_node *node;
+    if (xa_max_index(xa->xa_levels) < last)
+        last = xa_max_index(xa->xa_levels);
 
-        if (slot == NULL)
-            break;
+    while (index <= last) {
+        void *slot;
 
-        node = slot;
-
-        while (index <= last) {
-            slot = node->xa_slots[(index >> node->xa_shift) & XA_MASK];
-
-            if (slot)
-                break;
-            index += 1ul << node->xa_shift;
-
-            if (((index >> node->xa_shift) & XA_MASK) == 0)
-                break;
-        }
+        slot = node->xa_slots[xa_slot_index(node->xa_shift, index)];
 
         if (slot) {
-            if (node->xa_shift == 0) {
+            if (xa_is_leaf(node)) {
                 *indexp = index;
                 return slot;
             }
-        } else if (index > last) {
-            return NULL;
+
+            node = slot;
         } else {
-            slot = node->xa_parent;
+            index += 1ul << node->xa_shift;
+
+            while (node && xa_slot_index(node->xa_shift, index) == 0) {
+                node = node->xa_parent;
+            }
+
+            if (!node)
+                break;
         }
     }
 
@@ -270,11 +286,12 @@ void *xa_find_after(struct xarray *xa, unsigned long *indexp,
                     unsigned long last)
 {
     void *ret;
-    unsigned long index = *indexp + 1;
+    unsigned long index = *indexp;
 
-    if (index > last)
+    if (index >= last)
         return NULL;
 
+    index += 1;
     ret = xa_find(xa, &index, last);
     if (ret)
         *indexp = index;

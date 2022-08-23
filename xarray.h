@@ -31,8 +31,10 @@ struct xarray {
 };
 
 #define XA_BITS (sizeof(void *) == 8 ? 6 : 4)
-#define XA_SLOT_MAX (1lu << 6)
+#define XA_SLOT_MAX (1lu << XA_BITS)
 #define XA_MASK (XA_SLOT_MAX - 1)
+
+#define XA_INDEX_MAX ((unsigned long)-1)
 
 struct xa_node {
     uint8_t xa_shift;
@@ -66,14 +68,15 @@ static inline void *xa_erase(struct xarray *xa, unsigned long index)
     return xa_store(xa, index, NULL);
 }
 
-void *xa_load(struct xarray *xa, unsigned long index);
+void *xa_load(const struct xarray *xa, unsigned long index);
 
 unsigned long xa_size(const struct xarray *xa);
 
 void xa_release(struct xarray *xa);
 
 struct xa_node *xa_get_node_by_index(struct xarray *xa, unsigned long index);
-struct xa_node *xa_find_node_by_index(struct xarray *xa, unsigned long index);
+const struct xa_node *xa_find_node_by_index(const struct xarray *xa,
+                                            unsigned long index);
 
 void *xa_find(struct xarray *xa, unsigned long *indexp, unsigned long last);
 
