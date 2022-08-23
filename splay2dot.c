@@ -90,13 +90,6 @@ int main()
 
     t2d_write_tree(&splay_config, tree.splay_node);
 
-#ifdef __GNUC__
-    splay_for_each_entry_safe_init (struct splay_tree_node, iter, &tree, node) {
-        splay_erase(&iter->node, &tree);
-        free(iter);
-    }
-
-#else
     {
         struct splay_node *iter, *n;
 
@@ -107,6 +100,5 @@ int main()
             free(node);
         }
     }
-
-#endif
+    return 0;
 }

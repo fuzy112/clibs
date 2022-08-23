@@ -11,12 +11,12 @@ struct my_node {
 int main()
 {
     struct my_node *iter, *n;
-
+    int i;
     LIST_HEAD(list);
 
     // srand(time(NULL));
 
-    for (int i = 0; i < 2000; ++i) {
+    for (i = 0; i < 2000; ++i) {
         struct my_node *n = (struct my_node *)malloc(sizeof(*n));
         n->value = i % 23 + i % 27;
         list_add_tail(&n->list, &list);
@@ -37,4 +37,6 @@ int main()
         list_del(&iter->list);
         free(iter);
     }
+
+    return 0;
 }

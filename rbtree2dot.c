@@ -102,4 +102,6 @@ int main()
             free(node);
         }
     }
+
+    return 0;
 }

@@ -30,10 +30,11 @@ int main()
 {
     struct rb_root tree = RB_ROOT_INIT;
     struct rb_node *iter, *n;
+    int i;
 
     srand(time(NULL));
 
-    for (int i = 0; i < 2000; ++i) {
+    for (i = 0; i < 2000; ++i) {
         struct my_node *n = (struct my_node *)malloc(sizeof(*n));
         n->value = rand() * rand();
         add_my_node(n, &tree);
@@ -48,7 +49,7 @@ int main()
     }
 
     rb_for_each (iter, &tree) {
-        printf("%d\n", rb_entry(iter, struct my_node, node)->value );
+        printf("%d\n", rb_entry(iter, struct my_node, node)->value);
     }
 
     rb_for_each_safe (iter, n, &tree) {
@@ -57,4 +58,6 @@ int main()
         rb_erase(iter, &tree);
         free(entry);
     }
+
+    return 0;
 }
