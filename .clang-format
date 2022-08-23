@@ -33,6 +33,30 @@ ForEachMacros:
   - rb_for_each_entry_init
   - rb_for_each_entry_safe_init
 
+  - list_for_each
+  - list_for_each_continue
+  - list_for_each_prev
+  - list_for_each_safe
+  - list_for_each_prev_safe
+  - list_for_each_entry
+  - list_for_each_entry_reverse
+  - list_for_each_entry_continue
+  - list_for_each_entry_continue_reverse
+  - list_for_each_entry_from
+  - list_for_each_entry_from_reverse
+  - list_for_each_entry_safe
+  - list_for_each_entry_safe_continue
+  - list_for_each_entry_safe_from
+  - list_for_each_entry_safe_reverse
+  - hlist_for_each
+  - hlist_for_each_safe
+  - hlist_for_each_entry
+  - hlist_for_each_entry_continue
+  - hlist_for_each_entry_from
+  - hlist_for_each_entry_safe
+  
+  - xa_for_each
+
   - splay_for_each
   - splay_for_each_safe
   - splay_for_each_entry
