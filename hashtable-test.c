@@ -25,14 +25,14 @@ int main()
         }
 
         t->key = i;
-        htable_add(my_table, t->key, &t->node);
+        hash_add(my_table, t->key, &t->node);
     }
 
     for (i = 0; i < 100; ++i) {
         struct hlist_node *pos;
         struct hlist_node *tmp;
 
-        htable_for_each_possible_safe (my_table, i, pos, tmp) {
+        hash_for_each_possible_safe (my_table, i, pos, tmp) {
             hlist_del(pos);
             t = container_of(pos, struct my_type, node);
             printf("[%i] = %i\n", i, t->key);
@@ -40,7 +40,7 @@ int main()
         }
     }
 
-    htable_for_each_entry_safe (my_table, i, t, n, node) {
+    hash_for_each_entry_safe (my_table, i, t, n, node) {
         printf("bucket[%i] = %i\n", i, t->key);
         hlist_del(&t->node);
         free(t);

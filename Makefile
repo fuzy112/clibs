@@ -2,8 +2,6 @@ OPTS ?=
 
 CFLAGS += -MMD -MP -g -Wall -Werror $(OPTS) -std=gnu89
 
-CXXFLAGS += -O3 -MMD -MP -g -Wno-invalid-offsetof -Wall  $(OPTS) -Wno-permissive -fpermissive 
-
 LDFLAGS += $(OPTS)
 
 CC=gcc
@@ -12,7 +10,7 @@ EXE=
 
 .PHONY: all
 
-targets := avltree-test rbtree-test tree-benchmark \
+targets := avltree-test rbtree-test \
 	avl2dot rb2dot genrnd list-test \
     splay2dot xarray-test urlencode-test \
 	circbuf-test hashtable-test
@@ -22,9 +20,6 @@ all: $(targets:%=%$(EXE))
 avltree-test$(EXE): avltree-test.o avltree.o
 
 rbtree-test$(EXE): rbtree.o rbtree-test.o
-
-tree-benchmark$(EXE): tree-benchmark.o
-	$(LINK.cpp) -DENABLE_BOOST=1 -o $@ $<
 
 avl2dot$(EXE): avltree.o tree2dot.o avltree2dot.o
 	$(LINK.c) -o $@ $^
