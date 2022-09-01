@@ -33,7 +33,7 @@ list-test$(EXE): list-test.o
 
 circbuf-test$(EXE): circbuf-test.o circbuf.o
 
-xarray-test$(EXE): xarray-test.o xarray.o 
+xarray-test$(EXE): xarray-test.o xarray.o
 
 genrnd$(EXE): genrnd.o
 
@@ -46,5 +46,11 @@ clean:
 	-$(RM) *.d *.o $(targets:%=%$(EXE))
 
 *.o: Makefile
+
+.PHONY: check-syntax
+
+# special target used by Emacs' FlyMake plugin
+check-syntax:
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(CHK_SOURCES)
 
 -include *.d
