@@ -9,10 +9,9 @@ int main()
     struct xarray xa = XA_INIT;
     void *v;
 
-
     for (i = 0; i < 100; ++i) {
-        if (xa_store(&xa, i*10, &i) == XA_FAILED) {
-            printf("failed to insert %li\n", i*10);
+        if (xa_store(&xa, i * 10, &i) == XA_FAILED) {
+            printf("failed to insert %li\n", i * 10);
         }
     }
 
@@ -30,18 +29,18 @@ int main()
 
     i = 0xffffffff;
     if (xa_store(&xa, i, &i) == XA_FAILED) {
-        printf("failed to insert %li\n", i*1000);
+        printf("failed to insert %li\n", i * 1000);
     }
     printf("size: %lu\n", xa_size(&xa));
     printf("levels: %u\n", xa.xa_levels);
-    printf("num_nodes: %lu\n",xa.xa_node_num);
+    printf("num_nodes: %lu\n", xa.xa_node_num);
 
     xa_erase(&xa, i);
     xa_release(&xa);
 
     printf("size: %lu\n", xa_size(&xa));
     printf("levels: %u\n", xa.xa_levels);
-    printf("num_nodes: %lu\n",xa.xa_node_num);
+    printf("num_nodes: %lu\n", xa.xa_node_num);
 
     xa_destroy(&xa);
 
