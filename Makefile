@@ -43,7 +43,7 @@ hashtable-test$(EXE): hashtable-test.o
 
 .PHONY: clean
 clean:
-	-$(RM) *.d *.o $(targets:%=%$(EXE))
+	-$(RM) -- *.d *.o $(targets:%=%$(EXE))
 
 *.o: Makefile
 
