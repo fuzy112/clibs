@@ -112,7 +112,6 @@ struct avl_node *avl_max(const struct avl_node *x)
     return y;
 }
 
-/* Precondition: x != avl_first(root) */
 struct avl_node *avl_prev(const struct avl_node *x)
 {
     struct avl_node *p;

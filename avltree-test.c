@@ -36,7 +36,7 @@ int main()
 
     for (i = 0; i < 2000; ++i) {
         struct my_node *n = (struct my_node *)malloc(sizeof(*n));
-        n->value = rand() * rand();
+        n->value = rand();
         add_my_node(n, &tree);
     }
 
