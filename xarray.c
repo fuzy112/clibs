@@ -204,14 +204,13 @@ void *xa_load(const struct xarray *xa, unsigned long index)
     return node->xa_slots[index & XA_MASK];
 }
 
-static void xa_free_level(struct xarray *xa, unsigned level,
-                          struct xa_node *node)
+static void xa_free_level(struct xarray *xa, int level, struct xa_node *node)
 {
     if (!node)
         return;
 
     if (level < xa->xa_levels) {
-        unsigned i;
+        int i;
         for (i = 0; i < XA_SLOT_MAX; ++i) {
             xa_free_level(xa, level + 1, node->xa_slots[i]);
         }
@@ -234,7 +233,7 @@ unsigned long xa_size(const struct xarray *xa)
 static void xa_release_level(struct xarray *xa, uint8_t level,
                              struct xa_node *node)
 {
-    uint8_t i;
+    int i;
 
     if (!node)
         return;
