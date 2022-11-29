@@ -57,7 +57,11 @@ static int avl_get_label(const void *node, char label[T2D_LABEL_MAX])
                                                 : "X");
 }
 
-static const char *avl_get_color(const void *node) { return "skyblue"; }
+static const char *avl_get_color(const void *node)
+{
+    (void)node;
+    return "skyblue";
+}
 
 static struct t2d_config avl_config = {
     .show_nil = false,

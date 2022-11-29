@@ -57,7 +57,11 @@ static int splay_get_label(const void *node, char *label)
         return snprintf(label, T2D_LABEL_MAX, "NIL");
 }
 
-static const char *splay_get_color(const void *node) { return "blue"; }
+static const char *splay_get_color(const void *node)
+{
+    (void)node;
+    return "blue";
+}
 
 static struct t2d_config splay_config = {
     .show_nil = true,

@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/uio.h>
 #include <unistd.h>
 
@@ -13,6 +14,11 @@ int main(int argc, char **argv)
     // unsigned offset = 0;
     ssize_t len;
     bool input_closed = false;
+
+    if (argc != 1) {
+        fprintf(stderr, "Invalid arguments\n");
+        exit(EXIT_FAILURE);
+    }
 
     if (fcntl(STDIN_FILENO, F_SETFL,
               fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK) < 0)
