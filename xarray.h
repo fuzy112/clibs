@@ -24,16 +24,28 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* A sparse array implemented as a radix tree */
 struct xarray {
+    /* pointer to the root node */
     void *xa_slot;
+
+    /* number of nodes in the tree */
     long xa_node_num;
-    uint8_t xa_levels;
+
+    /* depth of the tree */
+    int8_t xa_levels;
 };
 
+/* bits of key used in each level */
 #define XA_BITS (sizeof(void *) == 8 ? 6 : 4)
+
+/* the maximum slot index in a level */
 #define XA_SLOT_MAX (1 << XA_BITS)
+
+/* bit mask for slot index */
 #define XA_MASK (XA_SLOT_MAX - 1)
 
+/* maximum allowed sparse array index */
 #define XA_INDEX_MAX ((unsigned long)-1)
 
 struct xa_node {
@@ -45,13 +57,17 @@ struct xa_node {
     void *xa_slots[XA_SLOT_MAX];
 };
 
+/* XA_FAILED is returned to report failure by functions that returns pointers.
+ */
 #define XA_FAILED ((void *)-1)
 
+/* Statically initializes an xarray. */
 #define XA_INIT                                                                \
     {                                                                          \
         NULL, 0, 0                                                             \
     }
 
+/* Initializes an xarray. */
 static inline void xa_init(struct xarray *xa)
 {
     xa->xa_slot = NULL;
@@ -59,20 +75,27 @@ static inline void xa_init(struct xarray *xa)
     xa->xa_levels = 0;
 }
 
+/* Destroys an xarray. */
 void xa_destroy(struct xarray *xa);
 
+/* Stores a value to the xarray at given index. */
 void *xa_store(struct xarray *xa, unsigned long index, void *item);
 
+/* Erases the specified elements from the xarray.
+   This is equivalent to storing NULL to the specified position.
+ */
 static inline void *xa_erase(struct xarray *xa, unsigned long index)
 {
     return xa_store(xa, index, NULL);
 }
 
+/* Loads a value from the xarray. */
 void *xa_load(const struct xarray *xa, unsigned long index);
 
+/* Returns the total number of values stored in the xarray. */
 unsigned long xa_size(const struct xarray *xa);
 
-/* Release unneeded memory */
+/* Releases unneeded memory */
 void xa_release(struct xarray *xa);
 
 struct xa_node *xa_get_node_by_index(struct xarray *xa, unsigned long index);

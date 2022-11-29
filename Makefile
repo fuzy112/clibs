@@ -88,6 +88,6 @@ clean:
 
 # special target used by Emacs' FlyMake plugin
 check-syntax:
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(CHK_SOURCES)
+	$(CC) -c -o /dev/null $(CPPFLAGS) $(CFLAGS) $(CHK_SOURCES)
 
 -include *.d
