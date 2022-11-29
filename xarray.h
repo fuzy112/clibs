@@ -78,7 +78,8 @@ static inline void xa_init(struct xarray *xa)
 /* Destroys an xarray. */
 void xa_destroy(struct xarray *xa);
 
-/* Stores a value to the xarray at given index. */
+/* Stores a value to the xarray at given index.
+   Returns XA_FAILED if the operations failes. */
 void *xa_store(struct xarray *xa, unsigned long index, void *item);
 
 /* Erases the specified elements from the xarray.
