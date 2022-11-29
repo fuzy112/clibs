@@ -210,6 +210,8 @@ void splay_erase(struct splay_node *x, struct splay_root *root)
     /* z will be y's (possibly null) single child. */
     struct splay_node *z = NULL;
 
+    (void)root;
+
     /* find y */
     if (x->splay_left && x->splay_right) {
         y = x->splay_right;

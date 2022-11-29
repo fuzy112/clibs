@@ -26,6 +26,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 static inline uint8_t __attribute_pure__ xa_slot_index(uint8_t shift,
                                                        unsigned long index)
@@ -42,9 +43,10 @@ static inline unsigned long __attribute_pure__ xa_max_index(uint8_t levels)
 
 static struct xa_node *xa_alloc_node(struct xarray *xa)
 {
-    struct xa_node *node = (struct xa_node *)calloc(1, sizeof(*node));
+    struct xa_node *node = malloc(sizeof(*node));
     if (!node)
         return_null_err(ENOMEM);
+    memset(node, 0, sizeof(*node));
     xa->xa_node_num++;
     return node;
 }
@@ -260,8 +262,6 @@ static void xa_release_level(struct xarray *xa, uint8_t level,
 
 void xa_release(struct xarray *xa)
 {
-    xa_release_level(xa, 0, xa->xa_slot);
-
     struct xa_node *node = xa->xa_slot;
     if (!node)
         return;
@@ -278,6 +278,8 @@ void xa_release(struct xarray *xa)
             node->xa_parent = NULL;
         }
     }
+
+    xa_release_level(xa, 0, xa->xa_slot);
 }
 
 void *xa_find(struct xarray *xa, unsigned long *indexp, unsigned long last)
@@ -285,11 +287,16 @@ void *xa_find(struct xarray *xa, unsigned long *indexp, unsigned long last)
     unsigned long index = *indexp;
     struct xa_node *node = xa->xa_slot;
 
+    if (!node)
+        return NULL;
+
     if (xa_max_index(xa->xa_levels) < last)
         last = xa_max_index(xa->xa_levels);
 
     while (index <= last) {
         void *slot;
+
+        assert(node);
 
         slot = node->xa_slots[xa_slot_index(node->xa_shift, index)];
 
@@ -344,5 +351,42 @@ int xa_insert(struct xarray *xa, unsigned long *indexp, void *item,
         node->xa_values++;
         node = node->xa_parent;
     }
+    return 0;
+}
+
+int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
+{
+    struct Param {
+        unsigned k;
+        void *ptr;
+    };
+
+    unsigned long i;
+    struct xarray xa;
+    void *v;
+
+    xa_init(&xa);
+
+    for (i = 0; i + sizeof(struct Param) < Size; i += sizeof(struct Param)) {
+        struct Param param;
+        memcpy(&param, Data, sizeof(param));
+        if (xa_store(&xa, i, param.ptr) == XA_FAILED)
+            abort();
+
+        assert(xa_load(&xa, param.k) == param.ptr);
+    }
+
+    xa_for_each (&xa, i, v) {
+        const void *p = &Data[i * sizeof(struct Param)];
+        struct Param param;
+        memcpy(&param, p, sizeof(param));
+        assert(param.ptr == v);
+    }
+
+    if (Data[0] % 2) {
+        xa_release(&xa);
+    }
+    xa_destroy(&xa);
+
     return 0;
 }

@@ -27,7 +27,7 @@
 struct xarray {
     void *xa_slot;
     long xa_node_num;
-    int8_t xa_levels;
+    uint8_t xa_levels;
 };
 
 #define XA_BITS (sizeof(void *) == 8 ? 6 : 4)
@@ -72,6 +72,7 @@ void *xa_load(const struct xarray *xa, unsigned long index);
 
 unsigned long xa_size(const struct xarray *xa);
 
+/* Release unneeded memory */
 void xa_release(struct xarray *xa);
 
 struct xa_node *xa_get_node_by_index(struct xarray *xa, unsigned long index);

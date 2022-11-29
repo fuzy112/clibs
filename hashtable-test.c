@@ -1,8 +1,8 @@
 #include "hashtable.h"
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 struct my_type {
     int key;
@@ -13,7 +13,7 @@ static HASHTABLE(my_table, 8);
 
 int main()
 {
-    int i;
+    unsigned int i;
     struct my_type *t;
     struct hlist_node *n;
 
@@ -32,7 +32,8 @@ int main()
         struct hlist_node *pos;
         struct hlist_node *tmp;
 
-        hash_for_each_possible_safe (my_table, i, pos, tmp) {
+        hash_for_each_possible_safe(my_table, i, pos, tmp)
+        {
             hlist_del(pos);
             t = container_of(pos, struct my_type, node);
             printf("[%i] = %i\n", i, t->key);
@@ -40,7 +41,8 @@ int main()
         }
     }
 
-    hash_for_each_entry_safe (my_table, i, t, n, node) {
+    hash_for_each_entry_safe(my_table, i, t, n, node)
+    {
         printf("bucket[%i] = %i\n", i, t->key);
         hlist_del(&t->node);
         free(t);

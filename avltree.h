@@ -67,18 +67,17 @@ static inline bool avl_empty(const struct avl_root *tree)
     return tree->avl_node == NULL;
 }
 
-static inline struct avl_node *avl_next_safe(const struct avl_node *n,
-                                             const struct avl_root *tree)
+static inline struct avl_node *avl_next_safe(const struct avl_node *n)
 {
-    return (n == avl_end(tree)) ? NULL : avl_next(n);
+    return (n == NULL) ? NULL : avl_next(n);
 }
 
 #define avl_for_each(pos, tree)                                                \
     for ((pos) = avl_first((tree)); (pos) != NULL; (pos) = avl_next((pos)))
 
 #define avl_for_each_safe(pos, n, tree)                                        \
-    for ((pos) = avl_first((tree)), (n) = avl_next_safe((pos), (tree));        \
-         (pos) != NULL; (pos) = (n), (n) = avl_next_safe((pos), (tree)))
+    for ((pos) = avl_first((tree)), (n) = avl_next_safe((pos)); (pos) != NULL; \
+         (pos) = (n), (n) = avl_next_safe((pos)))
 
 #define avl_entry(ptr, type, member) container_of(ptr, type, member)
 
