@@ -54,7 +54,6 @@ static inline void avl_root_init(struct avl_root *tree)
     tree->avl_node = NULL;
 }
 
-#define avl_end(tree) ((struct avl_node *)NULL)
 struct avl_node *avl_first(const struct avl_root *tree);
 struct avl_node *avl_last(const struct avl_root *tree);
 struct avl_node *avl_max(const struct avl_node *x);
