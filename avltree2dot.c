@@ -11,7 +11,7 @@ struct avl_tree_node {
 
 static void avl_insert_node(struct avl_tree_node *node, struct avl_root *tree)
 {
-    struct avl_node *parent = avl_end(tree);
+    struct avl_node *parent = NULL;
     struct avl_node **link = &tree->avl_node;
 
     while (*link != NULL) {
