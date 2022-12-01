@@ -65,33 +65,32 @@ static inline bool rb_empty(const struct rb_root *tree)
     return tree->rb_node == NULL;
 }
 
-static inline struct rb_node *rb_next_safe(const struct rb_node *n)
-{
-    return (n == NULL) ? NULL : rb_next(n);
-}
-
 #define rb_for_each(pos, tree)                                                 \
-    for ((pos) = rb_first((tree)); (pos) != NULL; (pos) = rb_next((pos)))
+    for ((pos) = rb_first(tree); (pos) != NULL; (pos) = rb_next((pos)))
 
 #define rb_for_each_safe(pos, n, tree)                                         \
-    for ((pos) = rb_first((tree)), (n) = rb_next_safe((pos)); (pos) != NULL;   \
-         (pos) = (n), (n) = rb_next_safe((pos)))
+    for ((void)(((pos) = rb_first(tree)) && ((n) = rb_next(pos)));             \
+         (pos) != NULL; (void)(((pos) = (n)) && ((n) = rb_next(pos))))
 
 #define rb_entry(ptr, type, member) container_of(ptr, type, member)
 
-#if __STDC_VERSION__ >= 199901L || __cplusplus
+#define rb_entry_safe(ptr, type, member)                                       \
+    ((ptr) ? rb_entry(ptr, type, member) : NULL)
 
-#define rb_for_each_init(pos, tree)                                            \
-    for (struct rb_node *pos = rb_first((tree)); pos != NULL;                  \
-         pos = rb_next((pos)))
+#define rb_first_entry(type, tree, member)                                     \
+    (rb_entry_safe(rb_first(tree), type, member))
 
-#define rb_for_each_safe_init(pos, tree)                                       \
-    for (struct rb_node *pos = rb_first((tree)),                               \
-                        *_rb_next = rb_next_safe((pos), (tree));               \
-         pos != NULL;                                                          \
-         (pos) = _rb_next, _rb_next = rb_next_safe((pos), (tree)))
+#define rb_next_entry(pos, member)                                             \
+    rb_entry_safe(rb_next(&(pos)->member), typeof(*pos), member)
 
-#endif
+#define rb_for_each_entry(pos, tree, member)                                   \
+    for ((pos) = rb_first_entry(typeof(*pos), tree, member); (pos) != NULL;    \
+         (pos) = rb_next_entry(pos, member))
+
+#define rb_for_each_entry_safe(pos, n, tree, member)                           \
+    for ((void)(((pos) = rb_first_entry(typeof(*pos), tree, member)) &&        \
+                ((n) = rb_next_entry(pos, member)));                           \
+         (pos); (void)(((pos) = (n)) && ((n) = rb_next_entry(pos, member))))
 
 void rb_balance_insert(struct rb_node *x, struct rb_root *root);
 
