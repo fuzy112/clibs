@@ -24,13 +24,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "container_of.h"
+
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#ifndef container_of
-#define container_of(ptr, type, member)                                        \
-    ((type *)((char *)ptr - offsetof(type, member)))
 #endif
 
 struct rb_root {
