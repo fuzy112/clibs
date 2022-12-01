@@ -30,14 +30,15 @@ int main()
 {
     struct avl_root tree = AVL_ROOT_INIT;
     struct avl_node *iter, *n;
+    struct my_node *myiter, *mynext;
     int i;
 
     srand(time(NULL));
 
     for (i = 0; i < 2000; ++i) {
-        struct my_node *n = (struct my_node *)malloc(sizeof(*n));
-        n->value = rand();
-        add_my_node(n, &tree);
+        struct my_node *mynode = (struct my_node *)malloc(sizeof(*mynode));
+        mynode->value = rand();
+        add_my_node(mynode, &tree);
     }
 
     avl_for_each_safe (iter, n, &tree) {
@@ -49,8 +50,12 @@ int main()
     }
 
     avl_for_each (iter, &tree) {
-        printf("%d\n", avl_entry(iter, struct my_node, node)->value );
+        printf("%d\n", avl_entry(iter, struct my_node, node)->value);
     }
+
+    avl_for_each_entry(myiter, &tree, node) { printf("%d\n", myiter->value); }
+
+    avl_for_each_entry_safe(myiter, mynext, &tree, node) { myiter = NULL; }
 
     avl_for_each_safe (iter, n, &tree) {
         struct my_node *entry = avl_entry(iter, struct my_node, node);
