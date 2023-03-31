@@ -44,9 +44,9 @@ EXE=
 .PHONY: all
 
 targets := avltree-test rbtree-test \
-	avl2dot rb2dot genrnd list-test \
-    splay2dot xarray-test urlencode-test \
-	circbuf-test hashtable-test
+           avl2dot rb2dot genrnd list-test \
+           xarray-test urlencode-test \
+	   circbuf-test hashtable-test
 
 all: $(targets:%=%$(EXE))
 
@@ -59,8 +59,6 @@ avl2dot$(EXE): avltree.o tree2dot.o avltree2dot.o
 
 rb2dot$(EXE): rbtree.o tree2dot.o rbtree2dot.o
 	$(LINK.c) -o $@ $^ $(LDLIBS)
-
-splay2dot$(EXE): splay2dot.o splay.o tree2dot.o
 
 list-test$(EXE): list-test.o
 
