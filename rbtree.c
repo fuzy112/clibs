@@ -296,7 +296,7 @@ void rb_erase(struct rb_node *x, struct rb_root *root)
                     rb_rotate_right(p, root);
                 else
                     rb_rotate_left(p, root);
-                
+
                 p->rb_is_black = false;
                 p->rb_parent->rb_is_black = true;
 
