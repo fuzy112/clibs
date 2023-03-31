@@ -1,6 +1,6 @@
 /* rbtree.h
  *
- * Copyright 2022 Zhengyi Fu <tsingyat@outlook.com>
+ * Copyright 2022-2023 Zhengyi Fu <tsingyat@outlook.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,17 +45,90 @@ struct rb_node {
 #define RB_ROOT_INIT   { NULL }
 // clang-format on
 
+
 static inline void rb_root_init(struct rb_root *tree) { tree->rb_node = NULL; }
 
-void rb_link_node(struct rb_node *rb_node, struct rb_node *rb_parent,
-                  struct rb_node **rb_link);
+static inline struct rb_node *rb_min(const struct rb_node *x)
+{
+    struct rb_node *y = NULL;
+    while (x != NULL) {
+        y = (struct rb_node *)x;
+        x = x->rb_left;
+    }
+    return y;
+}
 
-struct rb_node *rb_first(const struct rb_root *tree);
-struct rb_node *rb_last(const struct rb_root *tree);
-struct rb_node *rb_max(const struct rb_node *x);
-struct rb_node *rb_min(const struct rb_node *x);
-struct rb_node *rb_next(const struct rb_node *x);
-struct rb_node *rb_prev(const struct rb_node *x);
+static inline struct rb_node *rb_max(const struct rb_node *x)
+{
+    struct rb_node *y = NULL;
+    while (x != NULL) {
+        y = (struct rb_node *)x;
+        x = x->rb_right;
+    }
+    return y;
+}
+
+/* Precondition: x != rb_first(root) */
+static inline struct rb_node *rb_prev(const struct rb_node *x)
+{
+    struct rb_node *p;
+
+    if (x == NULL)
+        return NULL;
+
+    if (x->rb_left != NULL)
+        return rb_max(x->rb_left);
+
+    p = x->rb_parent;
+    while (p && p->rb_left == x) {
+        x = p;
+        p = x->rb_parent;
+    }
+
+    return p;
+}
+
+static inline struct rb_node *rb_next(const struct rb_node *x)
+{
+    struct rb_node *p;
+
+    if (x == NULL)
+        return NULL;
+
+    if (x->rb_right != NULL)
+        return rb_min(x->rb_right);
+
+    p = x->rb_parent;
+    while (p && p->rb_right == x) {
+        x = p;
+        p = x->rb_parent;
+    }
+
+    return p;
+}
+
+
+static inline struct rb_node *rb_first(const struct rb_root *tree)
+{
+    return rb_min(tree->rb_node);
+}
+
+static inline struct rb_node *rb_last(const struct rb_root *tree)
+{
+    return rb_max(tree->rb_node);
+}
+
+
+/* Link node x to parent. */
+static inline void rb_link_node(struct rb_node *x, struct rb_node *parent,
+                  struct rb_node **link)
+{
+    *link = x;
+    x->rb_parent = parent;
+    x->rb_left = x->rb_right = NULL;
+    x->rb_is_black = false;
+}
+
 
 static inline bool rb_empty(const struct rb_root *tree)
 {

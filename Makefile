@@ -38,7 +38,6 @@ CFLAGS += $(OPTS) -std=gnu89
 
 LDFLAGS += $(OPTS)
 
-CC=clang
 
 EXE=
 

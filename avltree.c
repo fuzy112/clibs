@@ -1,6 +1,6 @@
 /* avltree.c
  *
- * Copyright 2022 Zhengyi Fu <tsingyat@outlook.com>
+ * Copyright 2022-2023 Zhengyi Fu <tsingyat@outlook.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,83 +82,6 @@ static void avl_rotate_left(struct avl_node *x, struct avl_root *tree)
     y->avl_left = x;
 }
 
-struct avl_node *avl_first(const struct avl_root *tree)
-{
-    return avl_min(tree->avl_node);
-}
-
-struct avl_node *avl_last(const struct avl_root *tree)
-{
-    return avl_max(tree->avl_node);
-}
-
-struct avl_node *avl_min(const struct avl_node *x)
-{
-    struct avl_node *y = NULL;
-    while (x != NULL) {
-        y = (struct avl_node *)x;
-        x = x->avl_left;
-    }
-    return y;
-}
-
-struct avl_node *avl_max(const struct avl_node *x)
-{
-    struct avl_node *y = NULL;
-    while (x != NULL) {
-        y = (struct avl_node *)x;
-        x = x->avl_right;
-    }
-    return y;
-}
-
-struct avl_node *avl_prev(const struct avl_node *x)
-{
-    struct avl_node *p;
-
-    if (x == NULL)
-        return NULL;
-
-    if (x->avl_left != NULL)
-        return avl_max(x->avl_left);
-
-    p = x->avl_parent;
-    while (p && p->avl_left == x) {
-        x = p;
-        p = x->avl_parent;
-    }
-
-    return p;
-}
-
-struct avl_node *avl_next(const struct avl_node *x)
-{
-    struct avl_node *p;
-
-    if (x == NULL)
-        return NULL;
-
-    if (x->avl_right != NULL)
-        return avl_min(x->avl_right);
-
-    p = x->avl_parent;
-    while (p && p->avl_right == x) {
-        x = p;
-        p = x->avl_parent;
-    }
-
-    return p;
-}
-
-/* Link node x to parent. */
-void avl_link_node(struct avl_node *x, struct avl_node *parent,
-                   struct avl_node **link)
-{
-    *link = x;
-    x->avl_parent = parent;
-    x->avl_left = x->avl_right = NULL;
-    x->avl_balance = 0;
-}
 
 void avl_balance_insert(struct avl_node *node, struct avl_root *tree)
 {
