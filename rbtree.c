@@ -32,10 +32,12 @@ static void rb_rotate_right(struct rb_node *x, struct rb_root *tree)
     */
 
     struct rb_node *y;
+    struct rb_node *parent;
+    struct rb_node *right;
 
     assert(x != NULL && x->rb_left != NULL);
     y = x->rb_left;
-    struct rb_node *parent = y->rb_parent = x->rb_parent;
+    parent = y->rb_parent = x->rb_parent;
 
     if (!parent) {
         tree->rb_node = y;
@@ -46,7 +48,7 @@ static void rb_rotate_right(struct rb_node *x, struct rb_root *tree)
             parent->rb_right = y;
     }
     x->rb_parent = y;
-    struct rb_node *right = x->rb_left = y->rb_right;
+    right = x->rb_left = y->rb_right;
     if (right)
         right->rb_parent = x;
     y->rb_right = x;
@@ -63,10 +65,12 @@ static void rb_rotate_left(struct rb_node *x, struct rb_root *tree)
     */
 
     struct rb_node *y;
+    struct rb_node *parent;
+    struct rb_node *left;
 
     assert(x != NULL && x->rb_right != NULL);
     y = x->rb_right;
-    struct rb_node *parent = y->rb_parent = x->rb_parent;
+    parent = y->rb_parent = x->rb_parent;
     if (!parent) {
         tree->rb_node = y;
     } else {
@@ -76,7 +80,7 @@ static void rb_rotate_left(struct rb_node *x, struct rb_root *tree)
             parent->rb_right = y;
     }
     x->rb_parent = y;
-    struct rb_node *left = x->rb_right = y->rb_left;
+    left = x->rb_right = y->rb_left;
     if (left)
         left->rb_parent = x;
     y->rb_left = x;
