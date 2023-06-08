@@ -174,7 +174,7 @@ static inline void rb_add(struct rb_node *x, struct rb_root *root,
                                        const struct rb_node *))
 {
     struct rb_node *parent = NULL;
-    struct rb_node **link = &parent->rb_left;
+    struct rb_node **link = &root->rb_node;
 
     while (*link != NULL) {
         parent = *link;
@@ -194,6 +194,7 @@ static inline struct rb_node *rb_find(const void *key, struct rb_root *root,
                                                   const struct rb_node *))
 {
     struct rb_node *node = root->rb_node;
+
     while (node != NULL) {
         int c = comp(key, node);
 

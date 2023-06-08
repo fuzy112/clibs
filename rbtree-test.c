@@ -69,5 +69,9 @@ int main()
         entry = NULL;
     }
 
+    rb_for_each_entry_safe (iter, n, &tree) {
+         xa_for_each
+    }
+
     return 0;
 }
