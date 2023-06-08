@@ -119,6 +119,6 @@ int xa_insert(struct xarray *xa, unsigned long *indexp, void *item,
          (value) != NULL; (value) = xa_find_after((xa), &(index), (end)))
 
 #define xa_for_each(xa, index, value)                                          \
-    xa_for_each_range(xa, index, value, 0, XA_INDEX_MAX)
+    xa_for_each_range (xa, index, value, 0, XA_INDEX_MAX)
 
 #endif // XARRAY_H
