@@ -18,11 +18,12 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#ifndef URLENCODE_H
-#define URLENCODE_H
+#ifndef ENCODE_URL_H
+#define ENCODE_URL_H
 
 #define URLENCODE_NO_RESV 0x1
 
-char *urlencode (const char *url, int flags);
+char *encode_url (const char *url, int flags);
+char *encode_url_component (const char *url, int flags);
 
-#endif // URLENCODE_H
+#endif // ENCODE_URL_H

@@ -23,25 +23,25 @@
 #define GOLDEN_RATIO_32 0x61C88647
 #define GOLDEN_RATIO_64 0x61C8864680B583EBull
 
-static inline uint32_t __attribute__((const))
-hash_64(uint64_t val, unsigned int bits)
+static inline uint32_t __attribute__ ((const))
+hash_64 (uint64_t val, unsigned int bits)
 {
-    return (val * GOLDEN_RATIO_64) >> (64 - bits);
+  return (val * GOLDEN_RATIO_64) >> (64 - bits);
 }
 
-static inline uint32_t __attribute__((const))
-hash_32(uint32_t val, unsigned int bits)
+static inline uint32_t __attribute__ ((const))
+hash_32 (uint32_t val, unsigned int bits)
 {
-    return (val * GOLDEN_RATIO_32) >> (32 - bits);
+  return (val * GOLDEN_RATIO_32) >> (32 - bits);
 }
 
-static inline uint32_t __attribute__((const))
-hash_long(unsigned long val, unsigned int bits)
+static inline uint32_t __attribute__ ((const))
+hash_long (unsigned long val, unsigned int bits)
 {
-    if (sizeof(long) == sizeof(uint32_t))
-        return hash_32(val, bits);
-    else
-        return hash_64(val, bits);
+  if (sizeof (long) == sizeof (uint32_t))
+    return hash_32 (val, bits);
+  else
+    return hash_64 (val, bits);
 }
 
 #endif /* HASH_H */

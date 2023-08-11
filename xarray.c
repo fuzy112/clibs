@@ -28,364 +28,414 @@
 #include <stdlib.h>
 #include <string.h>
 
-static inline uint8_t __attribute_pure__ xa_slot_index(uint8_t shift,
-                                                       unsigned long index)
+static inline uint8_t __attribute_pure__
+xa_slot_index (uint8_t shift, unsigned long index)
 {
-    return (uint8_t)(index >> shift) & XA_MASK;
+  return (uint8_t)(index >> shift) & XA_MASK;
 }
 
-static inline unsigned long __attribute_pure__ xa_max_index(uint8_t levels)
+static inline unsigned long __attribute_pure__
+xa_max_index (uint8_t levels)
 {
-    if (levels * XA_BITS > 8 * sizeof(unsigned long))
-        return XA_INDEX_MAX;
-    return ((1lu << (XA_BITS * (levels))) - 1lu);
+  if (levels * XA_BITS > 8 * sizeof (unsigned long))
+    return XA_INDEX_MAX;
+  return ((1lu << (XA_BITS * (levels))) - 1lu);
 }
 
-static struct xa_node *xa_alloc_node(struct xarray *xa)
+static struct xa_node *
+xa_alloc_node (struct xarray *xa)
 {
-    struct xa_node *node = malloc(sizeof(*node));
-    if (!node)
-        return_null_err(ENOMEM);
-    memset(node, 0, sizeof(*node));
-    xa->xa_node_num++;
-    return node;
+  struct xa_node *node = malloc (sizeof (*node));
+  if (!node)
+    return_null_err (ENOMEM);
+  memset (node, 0, sizeof (*node));
+  xa->xa_node_num++;
+  return node;
 }
 
-static inline bool xa_is_leaf(const struct xa_node *node)
+static inline bool
+xa_is_leaf (const struct xa_node *node)
 {
-    assert(node);
-    return node->xa_shift == 0;
+  assert (node);
+  return node->xa_shift == 0;
 }
 
-static int xa_increase_level(struct xarray *xa)
+static int
+xa_increase_level (struct xarray *xa)
 {
-    struct xa_node *node = xa_alloc_node(xa);
-    struct xa_node *old_root;
-    if (!node)
-        return -1;
+  struct xa_node *node = xa_alloc_node (xa);
+  struct xa_node *old_root;
+  if (!node)
+    return -1;
 
-    old_root = node->xa_slots[0] = xa->xa_slot;
-    if (old_root) {
-        old_root->xa_parent = node;
-        node->xa_values = old_root->xa_values;
+  old_root = node->xa_slots[0] = xa->xa_slot;
+  if (old_root)
+    {
+      old_root->xa_parent = node;
+      node->xa_values = old_root->xa_values;
     }
-    xa->xa_slot = node;
-    xa->xa_levels++;
-    node->xa_shift = XA_BITS * (xa->xa_levels - 1);
-    node->xa_count = old_root != NULL ? 1 : 0;
+  xa->xa_slot = node;
+  xa->xa_levels++;
+  node->xa_shift = XA_BITS * (xa->xa_levels - 1);
+  node->xa_count = old_root != NULL ? 1 : 0;
 
-    return 0;
+  return 0;
 }
 
-struct xa_node *xa_get_leaf_by_index(struct xarray *xa,
-                                     const unsigned long index)
+struct xa_node *
+xa_get_leaf_by_index (struct xarray *xa, const unsigned long index)
 {
-    uint8_t i;
-    void **slot;
-    struct xa_node *xa_parent = NULL;
+  uint8_t i;
+  void **slot;
+  struct xa_node *xa_parent = NULL;
 
-    while ((index != XA_INDEX_MAX ? (index + 1) : index) >
-           xa_max_index(xa->xa_levels)) {
-        if (xa_increase_level(xa))
-            return NULL;
-    }
-
-    slot = &xa->xa_slot;
-    for (i = 0; i < xa->xa_levels; ++i) {
-        if (*slot == NULL) {
-            struct xa_node *node = *slot = xa_alloc_node(xa);
-            if (node == NULL)
-                return NULL;
-
-            assert(xa_parent);
-            node->xa_parent = xa_parent;
-            node->xa_offset = xa_slot_index(xa_parent->xa_shift, index);
-            node->xa_shift = xa_parent->xa_shift - XA_BITS;
-            xa_parent->xa_count++;
-        }
-
-        xa_parent = *slot;
-        slot = &xa_parent->xa_slots[xa_slot_index(xa_parent->xa_shift, index)];
+  while ((index != XA_INDEX_MAX ? (index + 1) : index)
+         > xa_max_index (xa->xa_levels))
+    {
+      if (xa_increase_level (xa))
+        return NULL;
     }
 
-    return xa_parent;
-}
-
-struct xa_node *xa_get_leaf_with_space_by_index(struct xarray *xa,
-                                                unsigned long *indexp,
-                                                unsigned long last)
-{
-    struct xa_node *node;
-    unsigned long index = *indexp;
-
-    node = xa_get_leaf_by_index(xa, index);
-
-    while (index <= last) {
-
-        if (!node)
+  slot = &xa->xa_slot;
+  for (i = 0; i < xa->xa_levels; ++i)
+    {
+      if (*slot == NULL)
+        {
+          struct xa_node *node = *slot = xa_alloc_node (xa);
+          if (node == NULL)
             return NULL;
 
-        if (node->xa_slots[index & XA_MASK]) {
-            index++;
-
-            if (xa_slot_index(node->xa_shift, index) == 0)
-                node = xa_get_leaf_by_index(xa, index);
-
-        } else {
-            *indexp = index;
-            return node;
+          assert (xa_parent);
+          node->xa_parent = xa_parent;
+          node->xa_offset = xa_slot_index (xa_parent->xa_shift, index);
+          node->xa_shift = xa_parent->xa_shift - XA_BITS;
+          xa_parent->xa_count++;
         }
+
+      xa_parent = *slot;
+      slot = &xa_parent->xa_slots[xa_slot_index (xa_parent->xa_shift, index)];
     }
 
-    return_null_err(EBUSY);
+  return xa_parent;
 }
 
-const struct xa_node *xa_find_leaf_by_index(const struct xarray *xa,
-                                            const unsigned long index)
+struct xa_node *
+xa_get_leaf_with_space_by_index (struct xarray *xa, unsigned long *indexp,
+                                 unsigned long last)
 {
-    uint8_t i;
-    void *const *slot;
-    const struct xa_node *xa_parent = NULL;
+  struct xa_node *node;
+  unsigned long index = *indexp;
 
-    if (index + 1 > xa_max_index(xa->xa_levels))
+  node = xa_get_leaf_by_index (xa, index);
+
+  while (index <= last)
+    {
+
+      if (!node)
         return NULL;
 
-    slot = &xa->xa_slot;
-    for (i = 0; i < xa->xa_levels; ++i) {
-        if (*slot == NULL)
-            return NULL;
+      if (node->xa_slots[index & XA_MASK])
+        {
+          index++;
 
-        xa_parent = *slot;
-        slot = &xa_parent->xa_slots[xa_slot_index(xa_parent->xa_shift, index)];
-    }
-
-    return xa_parent;
-}
-
-void *xa_store(struct xarray *xa, unsigned long index, void *item)
-{
-    struct xa_node *node = xa_get_leaf_by_index(xa, index);
-    void **slot;
-    void *old_value;
-
-    if (!node)
-        return_val_err(item ? XA_FAILED : NULL, ENOMEM);
-
-    slot = &node->xa_slots[index & XA_MASK];
-
-    old_value = *slot;
-
-    *slot = item;
-
-    if (old_value && !item) {
-        node->xa_count--;
-        while (node != 0) {
-            node->xa_values--;
-            node = node->xa_parent;
+          if (xa_slot_index (node->xa_shift, index) == 0)
+            node = xa_get_leaf_by_index (xa, index);
+        }
+      else
+        {
+          *indexp = index;
+          return node;
         }
     }
 
-    if (!old_value && item) {
-        node->xa_count++;
-        while (node != 0) {
-            node->xa_values++;
-            node = node->xa_parent;
-        }
-    }
-    return old_value;
+  return_null_err (EBUSY);
 }
 
-void *xa_load(const struct xarray *xa, unsigned long index)
+const struct xa_node *
+xa_find_leaf_by_index (const struct xarray *xa, const unsigned long index)
 {
-    const struct xa_node *node = xa_find_leaf_by_index(xa, index);
+  uint8_t i;
+  void *const *slot;
+  const struct xa_node *xa_parent = NULL;
 
-    if (!node)
-        return NULL;
-    return node->xa_slots[index & XA_MASK];
-}
-
-static void xa_free_level(struct xarray *xa, int level, struct xa_node *node)
-{
-    if (!node)
-        return;
-
-    if (level < xa->xa_levels) {
-        int i;
-        for (i = 0; i < XA_SLOT_MAX; ++i) {
-            xa_free_level(xa, level + 1, node->xa_slots[i]);
-        }
-
-        free(node);
-    }
-}
-
-void xa_destroy(struct xarray *xa) { xa_free_level(xa, 0, xa->xa_slot); }
-
-unsigned long xa_size(const struct xarray *xa)
-{
-    struct xa_node *root = xa->xa_slot;
-    if (root) {
-        return root->xa_values;
-    }
-    return 0;
-}
-
-static void xa_release_level(struct xarray *xa, uint8_t level,
-                             struct xa_node *node)
-{
-    int i;
-
-    if (!node)
-        return;
-
-    if (level == xa->xa_levels)
-        return;
-
-    if (level + 1 < xa->xa_levels) {
-        for (i = 0; i < XA_SLOT_MAX; ++i) {
-            xa_release_level(xa, level + 1, node->xa_slots[i]);
-        }
-    }
-
-    if (node->xa_count == 0) {
-        xa->xa_node_num--;
-        if (node->xa_parent) {
-            node->xa_parent->xa_slots[node->xa_offset] = NULL;
-            node->xa_parent->xa_count--;
-        } else {
-            xa->xa_slot = NULL;
-        }
-        free(node);
-    }
-}
-
-void xa_release(struct xarray *xa)
-{
-    struct xa_node *node = xa->xa_slot;
-    if (!node)
-        return;
-
-    while (node->xa_shift != 0 && node->xa_count == 1 &&
-           node->xa_slots[0] != NULL) {
-        node = node->xa_slots[0];
-        assert(node != xa->xa_slot);
-        free(xa->xa_slot);
-        xa->xa_slot = node;
-        xa->xa_node_num--;
-        xa->xa_levels--;
-        if (node) {
-            node->xa_parent = NULL;
-        }
-    }
-
-    xa_release_level(xa, 0, xa->xa_slot);
-}
-
-void *xa_find(struct xarray *xa, unsigned long *indexp, unsigned long last)
-{
-    unsigned long index = *indexp;
-    struct xa_node *node = xa->xa_slot;
-
-    if (!node)
-        return NULL;
-
-    if (xa_max_index(xa->xa_levels) < last)
-        last = xa_max_index(xa->xa_levels);
-
-    while (index <= last) {
-        void *slot;
-
-        assert(node);
-
-        slot = node->xa_slots[xa_slot_index(node->xa_shift, index)];
-
-        if (slot) {
-            if (xa_is_leaf(node)) {
-                *indexp = index;
-                return slot;
-            }
-
-            node = slot;
-        } else {
-            index += 1ul << node->xa_shift;
-
-            while (node && xa_slot_index(node->xa_shift, index) == 0) {
-                node = node->xa_parent;
-            }
-
-            if (!node)
-                break;
-        }
-    }
-
+  if (index + 1 > xa_max_index (xa->xa_levels))
     return NULL;
-}
 
-void *xa_find_after(struct xarray *xa, unsigned long *indexp,
-                    unsigned long last)
-{
-    void *ret;
-    unsigned long index = *indexp;
-
-    if (index >= last)
+  slot = &xa->xa_slot;
+  for (i = 0; i < xa->xa_levels; ++i)
+    {
+      if (*slot == NULL)
         return NULL;
 
-    index += 1;
-    ret = xa_find(xa, &index, last);
-    if (ret)
-        *indexp = index;
-    return ret;
+      xa_parent = *slot;
+      slot = &xa_parent->xa_slots[xa_slot_index (xa_parent->xa_shift, index)];
+    }
+
+  return xa_parent;
 }
 
-int xa_insert(struct xarray *xa, unsigned long *indexp, void *item,
-              unsigned long last)
+void *
+xa_store (struct xarray *xa, unsigned long index, void *item)
 {
-    struct xa_node *node = xa_get_leaf_with_space_by_index(xa, indexp, last);
-    if (!node)
-        return -1;
+  struct xa_node *node = xa_get_leaf_by_index (xa, index);
+  void **slot;
+  void *old_value;
 
-    node->xa_slots[(*indexp) & XA_MASK] = item;
-    node->xa_count++;
-    while (node) {
-        node->xa_values++;
-        node = node->xa_parent;
+  if (!node)
+    return_val_err (item ? XA_FAILED : NULL, ENOMEM);
+
+  slot = &node->xa_slots[index & XA_MASK];
+
+  old_value = *slot;
+
+  *slot = item;
+
+  if (old_value && !item)
+    {
+      node->xa_count--;
+      while (node != 0)
+        {
+          node->xa_values--;
+          node = node->xa_parent;
+        }
     }
-    return 0;
+
+  if (!old_value && item)
+    {
+      node->xa_count++;
+      while (node != 0)
+        {
+          node->xa_values++;
+          node = node->xa_parent;
+        }
+    }
+  return old_value;
 }
 
-int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
+void *
+xa_load (const struct xarray *xa, unsigned long index)
 {
-    struct Param {
-        unsigned k;
-        void *ptr;
-    };
+  const struct xa_node *node = xa_find_leaf_by_index (xa, index);
 
-    unsigned long i;
-    struct xarray xa;
-    void *v;
+  if (!node)
+    return NULL;
+  return node->xa_slots[index & XA_MASK];
+}
 
-    xa_init(&xa);
+static void
+xa_free_level (struct xarray *xa, int level, struct xa_node *node)
+{
+  if (!node)
+    return;
 
-    for (i = 0; i + sizeof(struct Param) < Size; i += sizeof(struct Param)) {
-        struct Param param;
-        memcpy(&param, Data, sizeof(param));
-        if (xa_store(&xa, i, param.ptr) == XA_FAILED)
-            abort();
+  if (level < xa->xa_levels)
+    {
+      int i;
+      for (i = 0; i < XA_SLOT_MAX; ++i)
+        {
+          xa_free_level (xa, level + 1, node->xa_slots[i]);
+        }
 
-        assert(xa_load(&xa, param.k) == param.ptr);
+      free (node);
+    }
+}
+
+void
+xa_destroy (struct xarray *xa)
+{
+  xa_free_level (xa, 0, xa->xa_slot);
+}
+
+unsigned long
+xa_size (const struct xarray *xa)
+{
+  struct xa_node *root = xa->xa_slot;
+  if (root)
+    {
+      return root->xa_values;
+    }
+  return 0;
+}
+
+static void
+xa_release_level (struct xarray *xa, uint8_t level, struct xa_node *node)
+{
+  int i;
+
+  if (!node)
+    return;
+
+  if (level == xa->xa_levels)
+    return;
+
+  if (level + 1 < xa->xa_levels)
+    {
+      for (i = 0; i < XA_SLOT_MAX; ++i)
+        {
+          xa_release_level (xa, level + 1, node->xa_slots[i]);
+        }
     }
 
-    xa_for_each (&xa, i, v) {
-        const void *p = &Data[i * sizeof(struct Param)];
-        struct Param param;
-        memcpy(&param, p, sizeof(param));
-        assert(param.ptr == v);
+  if (node->xa_count == 0)
+    {
+      xa->xa_node_num--;
+      if (node->xa_parent)
+        {
+          node->xa_parent->xa_slots[node->xa_offset] = NULL;
+          node->xa_parent->xa_count--;
+        }
+      else
+        {
+          xa->xa_slot = NULL;
+        }
+      free (node);
+    }
+}
+
+void
+xa_release (struct xarray *xa)
+{
+  struct xa_node *node = xa->xa_slot;
+  if (!node)
+    return;
+
+  while (node->xa_shift != 0 && node->xa_count == 1
+         && node->xa_slots[0] != NULL)
+    {
+      node = node->xa_slots[0];
+      assert (node != xa->xa_slot);
+      free (xa->xa_slot);
+      xa->xa_slot = node;
+      xa->xa_node_num--;
+      xa->xa_levels--;
+      if (node)
+        {
+          node->xa_parent = NULL;
+        }
     }
 
-    if (Data[0] % 2) {
-        xa_release(&xa);
-    }
-    xa_destroy(&xa);
+  xa_release_level (xa, 0, xa->xa_slot);
+}
 
-    return 0;
+void *
+xa_find (struct xarray *xa, unsigned long *indexp, unsigned long last)
+{
+  unsigned long index = *indexp;
+  struct xa_node *node = xa->xa_slot;
+
+  if (!node)
+    return NULL;
+
+  if (xa_max_index (xa->xa_levels) < last)
+    last = xa_max_index (xa->xa_levels);
+
+  while (index <= last)
+    {
+      void *slot;
+
+      assert (node);
+
+      slot = node->xa_slots[xa_slot_index (node->xa_shift, index)];
+
+      if (slot)
+        {
+          if (xa_is_leaf (node))
+            {
+              *indexp = index;
+              return slot;
+            }
+
+          node = slot;
+        }
+      else
+        {
+          index += 1ul << node->xa_shift;
+
+          while (node && xa_slot_index (node->xa_shift, index) == 0)
+            {
+              node = node->xa_parent;
+            }
+
+          if (!node)
+            break;
+        }
+    }
+
+  return NULL;
+}
+
+void *
+xa_find_after (struct xarray *xa, unsigned long *indexp, unsigned long last)
+{
+  void *ret;
+  unsigned long index = *indexp;
+
+  if (index >= last)
+    return NULL;
+
+  index += 1;
+  ret = xa_find (xa, &index, last);
+  if (ret)
+    *indexp = index;
+  return ret;
+}
+
+int
+xa_insert (struct xarray *xa, unsigned long *indexp, void *item,
+           unsigned long last)
+{
+  struct xa_node *node = xa_get_leaf_with_space_by_index (xa, indexp, last);
+  if (!node)
+    return -1;
+
+  node->xa_slots[(*indexp) & XA_MASK] = item;
+  node->xa_count++;
+  while (node)
+    {
+      node->xa_values++;
+      node = node->xa_parent;
+    }
+  return 0;
+}
+
+int
+LLVMFuzzerTestOneInput (const uint8_t *Data, size_t Size)
+{
+  struct Param
+  {
+    unsigned k;
+    void *ptr;
+  };
+
+  unsigned long i;
+  struct xarray xa;
+  void *v;
+
+  xa_init (&xa);
+
+  for (i = 0; i + sizeof (struct Param) < Size; i += sizeof (struct Param))
+    {
+      struct Param param;
+      memcpy (&param, Data, sizeof (param));
+      if (xa_store (&xa, i, param.ptr) == XA_FAILED)
+        abort ();
+
+      assert (xa_load (&xa, param.k) == param.ptr);
+    }
+
+  xa_for_each (&xa, i, v)
+    {
+      const void *p = &Data[i * sizeof (struct Param)];
+      struct Param param;
+      memcpy (&param, p, sizeof (param));
+      assert (param.ptr == v);
+    }
+
+  if (Data[0] % 2)
+    {
+      xa_release (&xa);
+    }
+  xa_destroy (&xa);
+
+  return 0;
 }
