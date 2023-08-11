@@ -1,6 +1,6 @@
-/* urlencode.h
+/* base64.h
  *
- * Copyright 2022 Zhengyi Fu <tsingyat@outlook.com>
+ * Copyright 2023 Zhengyi Fu <tsingyat@outlook.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,14 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#ifndef URLENCODE_H
-#define URLENCODE_H
 
-#define URLENCODE_NO_RESV 0x1
+#ifndef BASE64_H
+#define BASE64_H
 
-char *urlencode (const char *url, int flags);
+#include <stddef.h>
 
-#endif // URLENCODE_H
+size_t base64_encode(char *dst, const void *src, size_t len);
+
+size_t base64_decode(void *dst, const char *src, size_t len);
+
+#endif // BASE64_H

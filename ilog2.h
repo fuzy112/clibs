@@ -4,9 +4,9 @@
 #include "fls.h"
 #include <stdint.h>
 
-static inline int __attribute__((const)) ilog2_u32(uint32_t val)
+static inline int __attribute__ ((const)) ilog2_u32 (uint32_t val)
 {
-    return fls(val) - 1;
+  return fls (val) - 1;
 }
 
 #endif /* ILOG2_H */
