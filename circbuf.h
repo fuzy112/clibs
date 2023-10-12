@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/uio.h>
 
 struct iovec;
 
@@ -85,7 +86,7 @@ circ_space_to_end (struct circbuf *circ)
   return n <= end ? n : end + 1;
 }
 
-void circ_prepare (struct circbuf *circ, struct iovec *iovecs,
+void circ_prepare (struct circbuf *circ, struct iovec iovecs[static 2],
                    unsigned *nr_vecs);
 
 static inline void
@@ -95,7 +96,8 @@ circ_commit (struct circbuf *circ, unsigned n)
   circ->tail += n;
 }
 
-void circ_data (struct circbuf *circ, struct iovec *iovecs, unsigned *nr_vecs);
+void circ_data (struct circbuf *circ, struct iovec iovecs[static 2],
+                unsigned *nr_vecs);
 
 static inline void
 circ_consume (struct circbuf *circ, unsigned n)

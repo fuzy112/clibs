@@ -19,7 +19,6 @@
  */
 
 #include "xarray.h"
-#include "error.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -47,7 +46,7 @@ xa_alloc_node (struct xarray *xa)
 {
   struct xa_node *node = malloc (sizeof (*node));
   if (!node)
-    return_null_err (ENOMEM);
+    return NULL;
   memset (node, 0, sizeof (*node));
   xa->xa_node_num++;
   return node;
@@ -66,7 +65,7 @@ xa_increase_level (struct xarray *xa)
   struct xa_node *node = xa_alloc_node (xa);
   struct xa_node *old_root;
   if (!node)
-    return -1;
+    return -errno;
 
   old_root = node->xa_slots[0] = xa->xa_slot;
   if (old_root)
@@ -78,7 +77,6 @@ xa_increase_level (struct xarray *xa)
   xa->xa_levels++;
   node->xa_shift = XA_BITS * (xa->xa_levels - 1);
   node->xa_count = old_root != NULL ? 1 : 0;
-
   return 0;
 }
 
@@ -93,7 +91,7 @@ xa_get_leaf_by_index (struct xarray *xa, const unsigned long index)
          > xa_max_index (xa->xa_levels))
     {
       if (xa_increase_level (xa))
-        return NULL;
+        return NULL; // errno = ENOMEM
     }
 
   slot = &xa->xa_slot;
@@ -103,7 +101,7 @@ xa_get_leaf_by_index (struct xarray *xa, const unsigned long index)
         {
           struct xa_node *node = *slot = xa_alloc_node (xa);
           if (node == NULL)
-            return NULL;
+            return NULL; // errno = ENOMEM
 
           assert (xa_parent);
           node->xa_parent = xa_parent;
@@ -130,7 +128,6 @@ xa_get_leaf_with_space_by_index (struct xarray *xa, unsigned long *indexp,
 
   while (index <= last)
     {
-
       if (!node)
         return NULL;
 
@@ -147,8 +144,8 @@ xa_get_leaf_with_space_by_index (struct xarray *xa, unsigned long *indexp,
           return node;
         }
     }
-
-  return_null_err (EBUSY);
+  errno = EBUSY;
+  return  NULL;
 }
 
 const struct xa_node *
@@ -159,13 +156,13 @@ xa_find_leaf_by_index (const struct xarray *xa, const unsigned long index)
   const struct xa_node *xa_parent = NULL;
 
   if (index + 1 > xa_max_index (xa->xa_levels))
-    return NULL;
+    return errno = EINVAL, NULL;
 
   slot = &xa->xa_slot;
   for (i = 0; i < xa->xa_levels; ++i)
     {
       if (*slot == NULL)
-        return NULL;
+        return errno = ENOENT, NULL;
 
       xa_parent = *slot;
       slot = &xa_parent->xa_slots[xa_slot_index (xa_parent->xa_shift, index)];
@@ -182,7 +179,7 @@ xa_store (struct xarray *xa, unsigned long index, void *item)
   void *old_value;
 
   if (!node)
-    return_val_err (item ? XA_FAILED : NULL, ENOMEM);
+    return item ? XA_FAILED : NULL;
 
   slot = &node->xa_slots[index & XA_MASK];
 
@@ -218,7 +215,7 @@ xa_load (const struct xarray *xa, unsigned long index)
   const struct xa_node *node = xa_find_leaf_by_index (xa, index);
 
   if (!node)
-    return NULL;
+    return NULL; // errno = EINVAL | ENOENT
   return node->xa_slots[index & XA_MASK];
 }
 

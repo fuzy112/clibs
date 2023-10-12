@@ -19,14 +19,14 @@
  */
 
 #include "circbuf.h"
-#include "error.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/uio.h>
+#include <errno.h>
 
 void
-circ_prepare (struct circbuf *circ, struct iovec *iovecs, unsigned *nr_vecs)
+circ_prepare (struct circbuf *circ, struct iovec iovecs[static 2], unsigned *nr_vecs)
 {
   unsigned tail_i = circ->tail & (circ->size - 1);
   unsigned before_head_i = (circ->head - 1) & (circ->size - 1);
@@ -62,7 +62,7 @@ circ_prepare (struct circbuf *circ, struct iovec *iovecs, unsigned *nr_vecs)
 }
 
 void
-circ_data (struct circbuf *circ, struct iovec *iovecs, unsigned *nr_vecs)
+circ_data (struct circbuf *circ, struct iovec iovecs[static 2], unsigned *nr_vecs)
 {
   unsigned tail_i = circ->tail & (circ->size - 1);
   unsigned head_i = circ->head & (circ->size - 1);
@@ -105,20 +105,15 @@ circ_alloc (unsigned size)
 
   assert ((size & (size - 1)) == 0);
   if (size == 0 || (size & (size - 1)) != 0)
-    {
-      return_null_err (EINVAL);
-    }
+    return errno = EINVAL, NULL;
 
-  circ = (struct circbuf *)malloc (sizeof (struct circbuf) + size);
+  circ = malloc (sizeof (struct circbuf) + size);
   if (!circ)
     return NULL;
-
   circ->size = size;
   circ->head = 0;
   circ->tail = 0;
-
   memset (circ->data, 0xff, size);
-
   return circ;
 }
 
@@ -148,7 +143,7 @@ circ_read (struct circbuf *circ, void *__restrict buf, unsigned size,
       return 0;
     }
 
-  return_fail_err (EIO);
+  return -(errno = EIO);
 }
 
 int
@@ -170,5 +165,5 @@ circ_write (struct circbuf *circ, const void *__restrict buf, unsigned size,
       *off += size;
       return 0;
     }
-  return_fail_err (EIO);
+  return -(errno = EIO);
 }
