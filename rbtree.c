@@ -324,7 +324,7 @@ rb_erase (struct rb_node *x, struct rb_root *root)
 
                          p            w
                         / \          / \
-                      *z   w   ->   p  d
+                      *z   w   ->   p   d
                           / \      / \
                           c d      z c
 
