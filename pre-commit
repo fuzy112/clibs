@@ -38,7 +38,7 @@ EOF
 	exit 1
 fi
 
-if ! ./update-copyright.sh ; then
+if ! bash ./update-copyright.sh ; then
 	cat <<\EOF
 Error: Did not update copyright notations.
 EOF
