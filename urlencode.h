@@ -1,6 +1,6 @@
 /* urlencode.h
  *
- * Copyright 2022 Zhengyi Fu <tsingyat@outlook.com>
+ * Copyright 2022, 2024 Zhengyi Fu <i@fuzy.me>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
