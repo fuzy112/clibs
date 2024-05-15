@@ -1,13 +1,13 @@
 #!/bin/bash
-#
-# update-copyright.sh
-# ~~~~~~~~~~~~~~~~~~~
-#
-# Copyright (c) 2020-2023 Zhengyi Fu (tsingyat at outlook dot com)
-#
-# Distributed under the Boost Software License, Version 1.0. (See accompanying
-# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#
+# Copyright © 2024  Zhengyi Fu <i@fuzy.me>
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 username=$(git config user.name)
 year=$(date +%Y)
