@@ -26,4 +26,5 @@
 #define C_DECL extern
 #define C_DECL_BEGIN
 #define C_DECL_END
+#endif
 #endif /*! DEFS_H */
