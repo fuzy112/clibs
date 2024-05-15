@@ -99,13 +99,13 @@ void
 rb_balance_insert (struct rb_node *x, struct rb_root *root)
 {
   struct rb_node *parent = x->rb_parent;
-  x->rb_is_black = x == root->rb_node;
 
+  x->rb_is_black = x == root->rb_node;
   while (x != root->rb_node && !parent->rb_is_black)
     {
       struct rb_node *gparent = parent->rb_parent;
-
       struct rb_node *tmp = gparent->rb_right;
+
       if (tmp != parent)
         {
           struct rb_node *y = tmp;

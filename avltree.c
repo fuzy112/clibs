@@ -132,6 +132,7 @@ avl_balance_insert (struct avl_node *node, struct avl_root *tree)
               else
                 {
                   struct avl_node *tmp = node->avl_left;
+
                   assert (node->avl_balance == -1);
                   avl_rotate_right (node, tree);
                   avl_rotate_left (parent, tree);
@@ -195,6 +196,7 @@ avl_balance_insert (struct avl_node *node, struct avl_root *tree)
                             / \       / \
                    */
                   struct avl_node *tmp = node->avl_right;
+
                   assert (node->avl_balance == +1);
                   avl_rotate_left (node, tree);
                   avl_rotate_right (parent, tree);
@@ -263,6 +265,7 @@ avl_erase (struct avl_node *x, struct avl_root *tree)
   /* remove y */
   {
     struct avl_node *tmp = y->avl_parent;
+
     if (z != NULL)
       z->avl_parent = tmp;
     if (!tmp)
@@ -385,8 +388,8 @@ avl_erase (struct avl_node *x, struct avl_root *tree)
                    u   v            v   b
                */
               struct avl_node *a = w->avl_left;
-              assert (a != NULL);
 
+              assert (a != NULL);
               avl_rotate_right (w, tree);
               avl_rotate_left (p, tree);
 
