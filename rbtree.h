@@ -174,6 +174,10 @@ rb_empty (const struct rb_root *tree)
               && ((n) = rb_next_entry (pos, member)));                        \
        (pos); (void)(((pos) = (n)) && ((n) = rb_next_entry (pos, member))))
 
+#define rb_for_each_equal(pos, key, tree, compare) \
+  for ((pos) = rb_find (key, tree, compare); \
+       (pos) != NULL; (pos) = rb_find_next (pos, key, compare))
+
 void rb_balance_insert (struct rb_node *x, struct rb_root *root);
 
 void rb_erase (struct rb_node *x, struct rb_root *root);
@@ -207,6 +211,7 @@ rb_find (const void *key, struct rb_root *root,
          int (*comp) (const void *, const struct rb_node *))
 {
   struct rb_node *node = root->rb_node;
+
   while (node != NULL)
     {
       int c = comp (key, node);
@@ -219,6 +224,19 @@ rb_find (const void *key, struct rb_root *root,
         return node;
     }
   return NULL;
+}
+
+static inline struct rb_node *
+rb_find_next (const struct rb_node *node, const void *key,
+              int (*compare) (const void *, const struct rb_node *))
+{
+  struct rb_node *next = rb_next (node);
+
+  if (!next)
+    return NULL;
+  if (compare (key, next) != 0)
+    return NULL;
+  return next;
 }
 
 static inline struct rb_node *
