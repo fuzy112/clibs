@@ -25,12 +25,12 @@ static void
 rb_rotate_right (struct rb_node *x, struct rb_root *tree)
 {
   /*
-          x           y
-         / \         / \
-        y   z   ->  a   x
-       / \             / \
-      a   b           b   z
-  */
+   *     x           y
+   *    / \         / \
+   *   y   z   ->  a   x
+   *  / \             / \
+   * a   b           b   z
+   */
 
   struct rb_node *y;
   struct rb_node *parent;
@@ -62,12 +62,12 @@ static void
 rb_rotate_left (struct rb_node *x, struct rb_root *tree)
 {
   /*
-      x             y
-     / \           / \
-    z   y    ->   x   b
-       / \       / \
-      a   b     z   a
-  */
+   *   x             y
+   *  / \           / \
+   * z   y    ->   x   b
+   *    / \       / \
+   *   a   b     z   a
+   */
 
   struct rb_node *y;
   struct rb_node *parent;
@@ -113,18 +113,18 @@ rb_balance_insert (struct rb_node *x, struct rb_root *root)
           if (y != NULL && !y->rb_is_black)
             {
               /*
-                Case 1: p is red & y is red
-
-                          g
-                         / \
-                        p   y
-                       / \
-                      x   x
-
-                      We violate the rule that a red node cannot have red
-                 children. So we color p and y black, and g red. This doesn't
-                 change black height, but g's parent may still be red. So we
-                 continue to rebalance at g.
+               * Case 1: p is red & y is red
+               *
+               *           g
+               *          / \
+               *         p   y
+               *        / \
+               *       x   x
+               *
+               *       We violate the rule that a red node cannot have red
+               *  children. So we color p and y black, and g red. This doesn't
+               *  change black height, but g's parent may still be red. So we
+               *  continue to rebalance at g.
                */
               parent->rb_is_black = true;
               y->rb_is_black = true;
@@ -136,39 +136,40 @@ rb_balance_insert (struct rb_node *x, struct rb_root *root)
             { /* y == NULL || y->is_black */
               if (x == parent->rb_right)
                 {
+
                   /*
-                    Case 2: y is black & x is p's right child.
-                    x and p are red.
-
-                           g           g
-                          / \         / \
-                         p   y  ->   x   y
-                          \         /
-                          x         p
-
-                    Left rotate at p to transform into case 3.
-                  */
+                   * Case 2: y is black & x is p's right child.
+                   * x and p are red.
+                   *
+                   *        g           g
+                   *       / \         / \
+                   *      p   y  ->   x   y
+                   *       \         /
+                   *       x         p
+                   *
+                   * Left rotate at p to transform into case 3.
+                   */
                   tmp = x;
                   x = parent;
                   parent = tmp;
                   rb_rotate_left (x, root);
-                } /* !rb_is_left_child_of_parent(x) */
+                }
 
               /*
-                Case 3: y is black & x is p's left child.
-                x and p are red.
-
-                       g               p
-                      / \             / \
-                     p   y     ->    x   g
-                    /                     \
-                   x                       y
-
-                We color g red and p black,
-                And rotate right at g.
-                As a result we transfer one of the two red nodes
-                of the left subtree to the right subtree.
-              */
+               * Case 3: y is black & x is p's left child.
+               * x and p are red.
+               *
+               *        g               p
+               *       / \             / \
+               *      p   y     ->    x   g
+               *     /                     \
+               *    x                       y
+               *
+               * We color g red and p black,
+               * And rotate right at g.
+               * As a result we transfer one of the two red nodes
+               * of the left subtree to the right subtree.
+               */
 
               parent->rb_is_black = true;
               gparent->rb_is_black = false;
@@ -177,7 +178,7 @@ rb_balance_insert (struct rb_node *x, struct rb_root *root)
             }
         }
       else
-        { /* !rb_is_left_child_of_parent(x->rb_parent) */
+        {
           struct rb_node *y = gparent->rb_left;
 
           if (y != NULL && !y->rb_is_black)
@@ -307,10 +308,10 @@ rb_erase (struct rb_node *x, struct rb_root *root)
           if (z != NULL && !z->rb_is_black)
             {
               /*
-                 Case 1: z is red.
-                 Color z black.
-                 Done
-              */
+               * Case 1: z is red.
+               * Color z black.
+               * Done
+               */
 
               z->rb_is_black = true;
               break;
@@ -320,16 +321,16 @@ rb_erase (struct rb_node *x, struct rb_root *root)
           if (!w->rb_is_black)
             {
               /*
-                 Case 2: z is black & w is red.
-
-                         p            w
-                        / \          / \
-                      *z   w   ->   p   d
-                          / \      / \
-                          c d      z c
-
-                 Left rotate at p to turn into other cases.
-              */
+               * Case 2: z is black & w is red.
+               *
+               *         p            w
+               *        / \          / \
+               *      *z   w   ->   p   d
+               *          / \      / \
+               *          c d      z c
+               *
+               * Left rotate at p to turn into other cases.
+               */
               struct rb_node *p = w->rb_parent;
 
               if (p->rb_left == (w))
@@ -349,19 +350,19 @@ rb_erase (struct rb_node *x, struct rb_root *root)
               && (w->rb_right == NULL || w->rb_right->rb_is_black))
             {
               /*
-                 Case 3: z and w are black, w has no red children
-
-                       p
-                      / \
-                    *z   w
-                        / \
-                        b c
-
-                 We decrease the black height of the right subtree by coloring
-                 w red. If p is red, painting p black will increase black
-                 height of both subtree. Otherwise, assign p to z and continue
-                 to rebalance.
-              */
+               * Case 3: z and w are black, w has no red children
+               *
+               *       p
+               *      / \
+               *    *z   w
+               *        / \
+               *        b c
+               *
+               * We decrease the black height of the right subtree by coloring
+               * w red. If p is red, painting p black will increase black
+               * height of both subtree. Otherwise, assign p to z and continue
+               * to rebalance.
+               */
               w->rb_is_black = false;
               z = w->rb_parent;
               if (z == root->rb_node)
@@ -379,13 +380,14 @@ rb_erase (struct rb_node *x, struct rb_root *root)
                   if (w->rb_left != NULL && !w->rb_left->rb_is_black)
                     {
                       /*
-                         Case 4:
-                              p              p
-                             / \            / \
-                            z   w    ->    z   c
-                               /                \
-                               c                 w
+                       * Case 4:
+                       *      p              p
+                       *     / \            / \
+                       *    z   w    ->    z   c
+                       *       /                \
+                       *       c                 w
                        */
+
                       w->rb_is_black = false;
                       w->rb_left->rb_is_black = true;
                       rb_rotate_right (w, root);
@@ -393,13 +395,14 @@ rb_erase (struct rb_node *x, struct rb_root *root)
                     }
 
                   /*
-                     Case 5:
-                         p                w
-                        / \              / \
-                       z   w       ->   p   d
-                          / \          / \
-                          c d          z c
+                   * Case 5:
+                   *     p                w
+                   *    / \              / \
+                   *   z   w       ->   p   d
+                   *      / \          / \
+                   *      c d          z c
                    */
+
                   w->rb_is_black = w->rb_parent->rb_is_black;
                   w->rb_right->rb_is_black = true;
                   w = w->rb_parent;
