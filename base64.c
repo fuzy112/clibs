@@ -75,7 +75,7 @@ encode_base64 (char dest[static 4], const uint8_t src[static 3])
 }
 
 size_t
-base64_encode (char *dest, const void *restrict src, size_t len)
+base64_encode (char *dest, const void *__restrict src, size_t len)
 {
   const uint8_t *s = src;
   size_t i;
@@ -101,7 +101,7 @@ base64_encode (char *dest, const void *restrict src, size_t len)
 }
 
 size_t
-base64_decode (void *dest, const char *restrict src, size_t len)
+base64_decode (void *dest, const char *__restrict src, size_t len)
 {
   size_t i;
   unsigned int val;
