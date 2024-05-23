@@ -24,13 +24,14 @@
 static void
 avl_rotate_right (struct avl_node *x, struct avl_root *tree)
 {
+
   /*
-          x           y
-         / \         / \
-        y   z   ->  a   x
-       / \             / \
-      a   b           b   z
-  */
+   *     x           y
+   *    / \         / \
+   *   y   z   ->  a   x
+   *  / \             / \
+   * a   b           b   z
+   */
 
   struct avl_node *y;
   struct avl_node *parent;
@@ -61,13 +62,14 @@ avl_rotate_right (struct avl_node *x, struct avl_root *tree)
 static void
 avl_rotate_left (struct avl_node *x, struct avl_root *tree)
 {
+
   /*
-      x             y
-     / \           / \
-    z   y    ->   x   b
-       / \       / \
-      a   b     z   a
-  */
+   *   x             y
+   *  / \           / \
+   * z   y    ->   x   b
+   *    / \       / \
+   *   a   b     z   a
+   */
 
   struct avl_node *y;
   struct avl_node *parent;
@@ -174,27 +176,29 @@ avl_balance_insert (struct avl_node *node, struct avl_root *tree)
             {
               if (node->avl_balance == -1)
                 {
-                  /*
-                         p            n
-                        /            / \
-                       n       ->   a   p
-                      / \              /
-                     a   b            b
-                   */
+
+		  /*
+		   *     p            n
+		   *    /            / \
+		   *   n       ->   a   p
+		   *  / \              /
+		   * a   b            b
+		   */
                   avl_rotate_right (parent, tree);
                   parent->avl_balance = 0;
                   node->avl_balance = 0;
                 }
               else
                 {
-                  /*
-                             p             p         t
-                            / \           / \       / \
-                           n       ->    t     ->  n   p
-                          / \           / \       / \ / \
-                             t         n
-                            / \       / \
-                   */
+
+		  /*
+		   *    p             p         t
+		   *   / \           / \       / \
+		   *  n       ->    t     ->  n   p
+		   * / \           / \       / \ / \
+		   *    t         n
+		   *   / \       / \
+		   */
                   struct avl_node *tmp = node->avl_right;
 
                   assert (node->avl_balance == +1);
@@ -330,39 +334,41 @@ avl_erase (struct avl_node *x, struct avl_root *tree)
         }
       else if (p->avl_balance == +2)
         {
-          /*
-                 p
-                / \
-               c   w
-                  / \
-                  a b
-           */
+	  /*
+	   *   p
+	   *  / \
+	   * c   w
+	   *    / \
+	   *    a b
+	   */
           struct avl_node *w = p->avl_right;
 
           assert (w != NULL);
           if (w->avl_balance == 0)
             {
-              /*
-                h(a) = h(c) = h > 0
-                h(c) = h - 1
 
-                     w
-                    / \
-                   p   b
-                  / \
-                  c a
-               */
-              avl_rotate_left (p, tree);
+              /*
+	       *   h(a) = h(c) = h > 0
+               *   h(c) = h - 1
+	       *
+               *        w
+               *       / \
+               *      p   b
+               *     / \
+               *     c a
+               * avl_rotate_left (p, tree);
+	       */
               w->avl_balance = -1;
               p->avl_balance = +1;
               break;
             }
           else if (w->avl_balance == +1)
             {
-              /*
-                 h(b) = h > 0
-                 h(a) = h(c) = h - 1
-               */
+
+	      /*
+	       * h(b) = h > 0
+	       * h(a) = h(c) = h - 1
+	       */
               avl_rotate_left (p, tree);
               w->avl_balance = 0;
               p->avl_balance = 0;
@@ -375,18 +381,19 @@ avl_erase (struct avl_node *x, struct avl_root *tree)
           else
             {
               assert (w->avl_balance == -1);
-              /*
-                 h(a) = h > 0
-                 h(b) = h(c) = h - 1
 
-                     p            p               a
-                    / \          / \             / \
-                   c   w        c   a           p   w
-                      / \   ->     / \     ->  / \ / \
-                     a   b        u   w       c  u v  b
-                    / \              / \
-                   u   v            v   b
-               */
+	      /*
+	       * h(a) = h > 0
+	       * h(b) = h(c) = h - 1
+	       *
+	       *     p            p               a
+	       *    / \          / \             / \
+	       *   c   w        c   a           p   w
+	       *      / \   ->     / \     ->  / \ / \
+	       *     a   b        u   w       c  u v  b
+	       *    / \              / \
+	       *   u   v            v   b
+	       */
               struct avl_node *a = w->avl_left;
 
               assert (a != NULL);
