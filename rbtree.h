@@ -188,11 +188,11 @@ void rb_balance_insert (struct rb_node *x, struct rb_root *root);
 
 void rb_erase (struct rb_node *x, struct rb_root *root);
 
-void rb_replace_node (struct rb_node *old, struct rb_node *new_node,
+void rb_replace_node (struct rb_node *old, struct rb_node *__restrict new_node,
                       struct rb_root *tree);
 
 static inline void
-rb_add (struct rb_node *x, struct rb_root *root,
+rb_add (struct rb_node *__restrict x, struct rb_root *root,
         bool (*less) (const struct rb_node *, const struct rb_node *))
 {
   struct rb_node *parent = NULL;
@@ -213,7 +213,7 @@ rb_add (struct rb_node *x, struct rb_root *root,
 }
 
 static inline struct rb_node *
-rb_find (const void *key, struct rb_root *root,
+rb_find (const void *__restrict key, struct rb_root *root,
          int (*comp) (const void *, const struct rb_node *))
 {
   struct rb_node *node = root->rb_node;
@@ -233,7 +233,7 @@ rb_find (const void *key, struct rb_root *root,
 }
 
 static inline struct rb_node *
-rb_find_next (const struct rb_node *node, const void *key,
+rb_find_next (const struct rb_node *node, const void *__restrict key,
               int (*compare) (const void *, const struct rb_node *))
 {
   struct rb_node *next;
@@ -249,7 +249,8 @@ rb_find_next (const struct rb_node *node, const void *key,
 }
 
 static inline struct rb_node *
-rb_find_or_insert (const void *key, struct rb_root *root, struct rb_node *node,
+rb_find_or_insert (const void *__restrict key, struct rb_root *root,
+		   struct rb_node *__restrict node,
                    int (*comp) (const void *, const struct rb_node *))
 {
   struct rb_node *parent = NULL;
