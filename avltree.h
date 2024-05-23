@@ -175,8 +175,7 @@ avl_empty (const struct avl_root *tree)
               && ((n) = avl_next_entry (pos, member)));                       \
        (pos); (void)(((pos) = (n)) && ((n) = avl_next_entry (pos, member))))
 
-void avl_link_node (struct avl_node *node, struct avl_node *parent,
-                    struct avl_node **link);
+
 void avl_balance_insert (struct avl_node *node, struct avl_root *tree);
 
 void avl_erase (struct avl_node *node, struct avl_root *tree);
