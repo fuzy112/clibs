@@ -54,8 +54,8 @@ wg_key_to_base64 (wg_key_b64_string base64, const wg_key key)
     encode_base64 (&base64[i * 4], &key[i * 3]);
   encode_base64 (&base64[i * 4],
                  (const uint8_t[]){ key[i * 3], key[i * 3 + 1], 0 });
-  base64[sizeof (base64) - 2] = '=';
-  base64[sizeof (base64) - 1] = '\0';
+  base64[sizeof (wg_key_b64_string) - 2] = '=';
+  base64[sizeof (wg_key_b64_string) - 1] = '\0';
 }
 
 static int
