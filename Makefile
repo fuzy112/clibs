@@ -60,7 +60,7 @@ EXE=
 
 targets := avltree-test rbtree-test \
            avl2dot rb2dot genrnd list-test \
-           xarray-test urlencode-test \
+           xarray-test \
 	   circbuf-test hashtable-test
 
 all: $(targets:%=%$(EXE))
@@ -83,8 +83,6 @@ xarray-test$(EXE): xarray-test.o xarray.o
 
 genrnd$(EXE): genrnd.o
 
-urlencode-test$(EXE): urlencode-test.o urlencode.o
-
 hashtable-test$(EXE): hashtable-test.o
 
 xarray-fuzzer: xarray.o
@@ -103,4 +101,3 @@ check-syntax:
 	$(CC) -S -Wall -Wextra -o /dev/null $(CPPFLAGS) $(CFLAGS) $(CHK_SOURCES)
 
 -include *.d
-
