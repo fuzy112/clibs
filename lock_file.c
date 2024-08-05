@@ -95,7 +95,9 @@ unlock_file (int *lock)
 
   ftruncate (*lock, 0);
   lockf (*lock, F_ULOCK, 0);
-  close (*lock);
+  s = close (*lock);
+  if (s < 0)
+    abort ();
 
   *lock = LOCK_FILE_INIT;
 }
