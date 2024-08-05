@@ -35,7 +35,7 @@ main ()
   for (i = 0; i < 100; ++i)
     {
       struct hlist_node *pos;
-      struct hlist_node *tmp;
+      struct hlist_node *tmp = NULL;
 
       hash_for_each_possible_safe (my_table, i, pos, tmp)
         {
