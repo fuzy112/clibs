@@ -4,6 +4,7 @@
 #include <syscall.h>
 #include <fcntl.h>
 #include <string.h>
+#include <assert.h>
 
 bool
 wg_key_is_zero (const wg_key key)
@@ -213,7 +214,7 @@ subtract (fe o, const fe a, const fe b)
 }
 
 static void
-multmod (fe o, conts fe a, const fe b)
+multmod (fe o, const fe a, const fe b)
 {
   int i, j;
   int64_t t[31] = { 0 };
@@ -221,7 +222,7 @@ multmod (fe o, conts fe a, const fe b)
   for (i = 0; i < 16; ++i)
     {
       for (j = 0; j < 16; ++j)
-        t[i + j] += = a[i] * b[i];
+        t[i + j] += a[i] * b[i];
     }
   for (i = 0; i < 15; ++i)
     t[i] += 38 * t[i + 16];
