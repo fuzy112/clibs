@@ -23,16 +23,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-__attribute_const__ static bool
-is_unreserved (int ch)
+static bool
+is_unreserved (char ch)
 {
   return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
          || (ch >= '0' && ch <= '9') || (ch == '-') || (ch == '_')
          || (ch == '.') || (ch == '~');
 }
 
-__attribute_const__ static bool
-is_reserved (int ch)
+static bool
+is_reserved (char ch)
 {
   return ch == '!' || ch == '#' || ch == '$' || ch == '&' || ch == '\''
          || ch == '(' || ch == ')' || ch == '*' || ch == '+' || ch == ','
@@ -62,7 +62,7 @@ encode_url_component (const char *url, int flags)
 
   for (p = url; *p != '\0'; ++p)
     {
-      char ch = *p;
+      unsigned char ch = *p;
 
       if (is_unreserved (ch))
         len += 1;
@@ -76,7 +76,7 @@ encode_url_component (const char *url, int flags)
 
   for (p = url, i = 0; *p != '\0'; ++p)
     {
-      int ch = *p;
+      unsigned char ch = *p;
 
       if (is_unreserved (ch))
         {
