@@ -43,9 +43,9 @@ struct avl_root
   struct avl_node *avl_node;
 };
 
-// clang-format off
+/* clang-format off */
 #define AVL_ROOT_INIT { NULL }
-// clang-format on
+/* clang-format on */
 
 static inline void
 avl_root_init (struct avl_root *tree)

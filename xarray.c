@@ -91,7 +91,7 @@ xa_get_leaf_by_index (struct xarray *xa, const unsigned long index)
          > xa_max_index (xa->xa_levels))
     {
       if (xa_increase_level (xa))
-        return NULL; // errno = ENOMEM
+        return NULL;		// errno = ENOMEM
     }
 
   slot = &xa->xa_slot;
@@ -101,7 +101,7 @@ xa_get_leaf_by_index (struct xarray *xa, const unsigned long index)
         {
           struct xa_node *node = *slot = xa_alloc_node (xa);
           if (node == NULL)
-            return NULL; // errno = ENOMEM
+            return NULL;	// errno = ENOMEM
 
           assert (xa_parent);
           node->xa_parent = xa_parent;
@@ -148,6 +148,12 @@ xa_get_leaf_with_space_by_index (struct xarray *xa, unsigned long *indexp,
   return  NULL;
 }
 
+
+/*
+ * Possible error codes:
+ *  EINVAL - the index excesses the largest index of the xarray
+ *  ENOENT - the specified slot is empty
+ */
 const struct xa_node *
 xa_find_leaf_by_index (const struct xarray *xa, const unsigned long index)
 {
@@ -156,13 +162,14 @@ xa_find_leaf_by_index (const struct xarray *xa, const unsigned long index)
   const struct xa_node *xa_parent = NULL;
 
   if (index + 1 > xa_max_index (xa->xa_levels))
-    return errno = EINVAL, NULL;
+    return errno = EINVAL, NULL; /* index excesses the largest index
+				    of the xarray */
 
   slot = &xa->xa_slot;
   for (i = 0; i < xa->xa_levels; ++i)
     {
       if (*slot == NULL)
-        return errno = ENOENT, NULL;
+        return errno = ENOENT, NULL; /* the slot is empty */
 
       xa_parent = *slot;
       slot = &xa_parent->xa_slots[xa_slot_index (xa_parent->xa_shift, index)];
@@ -215,7 +222,7 @@ xa_load (const struct xarray *xa, unsigned long index)
   const struct xa_node *node = xa_find_leaf_by_index (xa, index);
 
   if (!node)
-    return NULL; // errno = EINVAL | ENOENT
+    return NULL;		// errno = EINVAL | ENOENT
   return node->xa_slots[index & XA_MASK];
 }
 

@@ -100,4 +100,9 @@ clean:
 check-syntax:
 	$(CC) -S -Wall -Wextra -o /dev/null $(CPPFLAGS) $(CFLAGS) $(CHK_SOURCES)
 
+.PHONY: TAGS
+
+TAGS:
+	etags *.c *.h
+
 -include *.d
