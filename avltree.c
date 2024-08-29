@@ -42,9 +42,7 @@ avl_rotate_right (struct avl_node *x, struct avl_root *tree)
   parent = y->avl_parent = x->avl_parent;
 
   if (!parent)
-    {
-      tree->avl_node = y;
-    }
+    tree->avl_node = y;
   else
     {
       if (parent->avl_left == x)
@@ -79,9 +77,7 @@ avl_rotate_left (struct avl_node *x, struct avl_root *tree)
   y = x->avl_right;
   parent = y->avl_parent = x->avl_parent;
   if (!parent)
-    {
-      tree->avl_node = y;
-    }
+    tree->avl_node = y;
   else
     {
       if (parent->avl_left == x)
@@ -140,10 +136,8 @@ avl_balance_insert (struct avl_node *node, struct avl_root *tree)
                   avl_rotate_left (parent, tree);
 
                   if (tmp->avl_balance == 0)
-                    {
-                      node->avl_balance = parent->avl_balance = 0;
-                    }
-                  else if (tmp->avl_balance == -1)
+		    node->avl_balance = parent->avl_balance = 0;
+		  else if (tmp->avl_balance == -1)
                     {
                       node->avl_balance = +1;
                       parent->avl_balance = 0;
@@ -206,9 +200,7 @@ avl_balance_insert (struct avl_node *node, struct avl_root *tree)
                   avl_rotate_right (parent, tree);
 
                   if (tmp->avl_balance == 0)
-                    {
-                      node->avl_balance = parent->avl_balance = 0;
-                    }
+		    node->avl_balance = parent->avl_balance = 0;
                   else if (tmp->avl_balance == +1)
                     {
                       node->avl_balance = -1;
@@ -273,9 +265,7 @@ avl_erase (struct avl_node *x, struct avl_root *tree)
     if (z != NULL)
       z->avl_parent = tmp;
     if (!tmp)
-      {
-        tree->avl_node = z;
-      }
+      tree->avl_node = z;
     else
       {
         if (tmp->avl_left == y)
@@ -298,9 +288,7 @@ avl_erase (struct avl_node *x, struct avl_root *tree)
         tmp->avl_parent = y;
       tmp = y->avl_parent = x->avl_parent;
       if (!tmp)
-        {
-          tree->avl_node = y;
-        }
+	tree->avl_node = y;
       else
         {
           if (tmp->avl_left == x)
@@ -329,9 +317,7 @@ avl_erase (struct avl_node *x, struct avl_root *tree)
           p = tmp;
         }
       else if (p->avl_balance == +1 || p->avl_balance == -1)
-        {
-          break;
-        }
+	break;
       else if (p->avl_balance == +2)
         {
 	  /*
@@ -401,10 +387,8 @@ avl_erase (struct avl_node *x, struct avl_root *tree)
               avl_rotate_left (p, tree);
 
               if (a->avl_balance == 0)
-                {
-                  /* h(u) = h(v) = h(b) = h(c) = h - 1 */
-                  p->avl_balance = w->avl_balance = 0;
-                }
+		/* h(u) = h(v) = h(b) = h(c) = h - 1 */
+		p->avl_balance = w->avl_balance = 0;
               else if (a->avl_balance == +1)
                 {
                   /* h(u) = h - 2, h(v) = h - 1 */
@@ -464,9 +448,7 @@ avl_erase (struct avl_node *x, struct avl_root *tree)
               avl_rotate_right (p, tree);
 
               if (a->avl_balance == 0)
-                {
-                  p->avl_balance = w->avl_balance = 0;
-                }
+		p->avl_balance = w->avl_balance = 0;
               else if (a->avl_balance == -1)
                 {
                   w->avl_balance = 0;
