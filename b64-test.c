@@ -14,7 +14,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "base64.h"
+#include "b64.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,16 +47,19 @@ static int pass_count = 0;
 
 TEST (encode_empty)
 {
-  char dest[10];
-  size_t len = base64_encode (dest, "", 0);
+  char dest[10] = {0};
+  size_t len = b64_encode (dest, "", 0);
+  fprintf(stderr, "DEBUG: Checking len assertion...\n");
   ASSERT (len == 0);
+  fprintf(stderr, "DEBUG: Checking dest[0] assertion...\n");
   ASSERT (dest[0] == '\0');
+  fprintf(stderr, "DEBUG: Both assertions passed\n");
 }
 
 TEST (encode_single_char)
 {
   char dest[10];
-  size_t len = base64_encode (dest, "f", 1);
+  size_t len = b64_encode (dest, "f", 1);
   ASSERT (len == 4);
   ASSERT (strcmp (dest, "Zg==") == 0);
 }
@@ -64,7 +67,7 @@ TEST (encode_single_char)
 TEST (encode_two_chars)
 {
   char dest[10];
-  size_t len = base64_encode (dest, "fo", 2);
+  size_t len = b64_encode (dest, "fo", 2);
   ASSERT (len == 4);
   ASSERT (strcmp (dest, "Zm8=") == 0);
 }
@@ -72,7 +75,7 @@ TEST (encode_two_chars)
 TEST (encode_three_chars)
 {
   char dest[10];
-  size_t len = base64_encode (dest, "foo", 3);
+  size_t len = b64_encode (dest, "foo", 3);
   ASSERT (len == 4);
   ASSERT (strcmp (dest, "Zm9v") == 0);
 }
@@ -80,7 +83,7 @@ TEST (encode_three_chars)
 TEST (encode_hello_world)
 {
   char dest[32];
-  size_t len = base64_encode (dest, "Hello, World!", 13);
+  size_t len = b64_encode (dest, "Hello, World!", 13);
   ASSERT (len == 20);
   ASSERT (strcmp (dest, "SGVsbG8sIFdvcmxkIQ==") == 0);
 }
@@ -94,7 +97,7 @@ TEST (encode_all_bytes)
   for (i = 0; i < 256; i++)
     data[i] = i;
 
-  size_t len = base64_encode (dest, data, 256);
+  size_t len = b64_encode (dest, data, 256);
   ASSERT (len == 344);
   ASSERT (dest[344] == '\0');
 }
@@ -102,14 +105,14 @@ TEST (encode_all_bytes)
 TEST (decode_empty)
 {
   char dest[10];
-  size_t len = base64_decode (dest, "", 0);
+  size_t len = b64_decode (dest, "", 0);
   ASSERT (len == 0);
 }
 
 TEST (decode_single_char)
 {
   char dest[10];
-  size_t len = base64_decode (dest, "Zg==", 4);
+  size_t len = b64_decode (dest, "Zg==", 4);
   ASSERT (len == 1);
   ASSERT (dest[0] == 'f');
 }
@@ -117,7 +120,7 @@ TEST (decode_single_char)
 TEST (decode_two_chars)
 {
   char dest[10];
-  size_t len = base64_decode (dest, "Zm8=", 4);
+  size_t len = b64_decode (dest, "Zm8=", 4);
   ASSERT (len == 2);
   ASSERT (memcmp (dest, "fo", 2) == 0);
 }
@@ -125,7 +128,7 @@ TEST (decode_two_chars)
 TEST (decode_three_chars)
 {
   char dest[10];
-  size_t len = base64_decode (dest, "Zm9v", 4);
+  size_t len = b64_decode (dest, "Zm9v", 4);
   ASSERT (len == 3);
   ASSERT (memcmp (dest, "foo", 3) == 0);
 }
@@ -133,7 +136,7 @@ TEST (decode_three_chars)
 TEST (decode_hello_world)
 {
   char dest[20];
-  size_t len = base64_decode (dest, "SGVsbG8sIFdvcmxkIQ==", 20);
+  size_t len = b64_decode (dest, "SGVsbG8sIFdvcmxkIQ==", 20);
   ASSERT (len == 13);
   ASSERT (memcmp (dest, "Hello, World!", 13) == 0);
 }
@@ -145,8 +148,8 @@ TEST (roundtrip_simple)
   char decoded[100];
   size_t enc_len, dec_len;
 
-  enc_len = base64_encode (encoded, original, strlen (original));
-  dec_len = base64_decode (decoded, encoded, enc_len);
+  enc_len = b64_encode (encoded, original, strlen (original));
+  dec_len = b64_decode (decoded, encoded, enc_len);
 
   ASSERT (dec_len == strlen (original));
   ASSERT (memcmp (decoded, original, strlen (original)) == 0);
@@ -163,8 +166,8 @@ TEST (roundtrip_binary)
   for (i = 0; i < 256; i++)
     original[i] = i;
 
-  enc_len = base64_encode (encoded, original, 256);
-  dec_len = base64_decode (decoded, encoded, enc_len);
+  enc_len = b64_encode (encoded, original, 256);
+  dec_len = b64_decode (decoded, encoded, enc_len);
 
   ASSERT (dec_len == 256);
   ASSERT (memcmp (decoded, original, 256) == 0);
@@ -183,8 +186,8 @@ TEST (roundtrip_various_lengths)
       for (i = 0; i < len; i++)
         original[i] = (char) (i % 256);
 
-      enc_len = base64_encode (encoded, original, len);
-      dec_len = base64_decode (decoded, encoded, enc_len);
+      enc_len = b64_encode (encoded, original, len);
+      dec_len = b64_decode (decoded, encoded, enc_len);
 
       ASSERT (dec_len == (size_t) len);
       ASSERT (memcmp (decoded, original, len) == 0);
@@ -194,7 +197,7 @@ TEST (roundtrip_various_lengths)
 TEST (padding_one_equals)
 {
   char dest[10];
-  size_t len = base64_decode (dest, "Zg=", 3);
+  size_t len = b64_decode (dest, "Zg=", 3);
   /* Note: This is technically malformed, but the decode handles it */
   /* We just verify it doesn't crash - len may be 0 or garbage */
   (void) len; /* Suppress unused variable warning */
@@ -211,8 +214,8 @@ TEST (long_string)
   for (i = 0; i < 1000; i++)
     original[i] = (char) ('A' + (i % 26));
 
-  enc_len = base64_encode (encoded, original, 1000);
-  dec_len = base64_decode (decoded, encoded, enc_len);
+  enc_len = b64_encode (encoded, original, 1000);
+  dec_len = b64_decode (decoded, encoded, enc_len);
 
   ASSERT (dec_len == 1000);
   ASSERT (memcmp (decoded, original, 1000) == 0);

@@ -1,4 +1,4 @@
-/* base64.h
+/* b64.h
  *
  * Copyright 2023, 2024 Zhengyi Fu <i@fuzy.me>
  *
@@ -19,13 +19,13 @@
  */
 
 
-#ifndef BASE64_H
-#define BASE64_H
+#ifndef B64_H
+#define B64_H
 
 #include <stddef.h>
 
-size_t base64_encode(char *dst, const void *src, size_t len);
+size_t b64_encode(char *dst, const void *src, size_t len);
 
-size_t base64_decode(void *dst, const char *src, size_t len);
+size_t b64_decode(void *dst, const char *src, size_t len);
 
-#endif // BASE64_H
+#endif // B64_H

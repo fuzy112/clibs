@@ -64,7 +64,7 @@ targets := avltree-test rbtree-test \
            avl2dot rb2dot genrnd list-test \
            xarray-test \
 	   circbuf-test hashtable-test \
-	   base64-test url-test \
+	   b64-test url-test \
 	   fd-test
 
 all: $(targets:%=%$(EXE))
@@ -89,7 +89,7 @@ genrnd$(EXE): genrnd.o
 
 hashtable-test$(EXE): hashtable-test.o
 
-base64-test$(EXE): base64-test.o base64.o
+b64-test$(EXE): b64-test.o b64.o
 
 url-test$(EXE): url-test.o encode_url.o
 

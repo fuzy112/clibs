@@ -1,4 +1,4 @@
-/* base64.c
+/* b64.c
  *
  * Copyright 2023, 2024 Zhengyi Fu <i@fuzy.me>
  *
@@ -18,12 +18,12 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#include "base64.h"
+#include "b64.h"
 #include <stdint.h>
 #include <string.h>
 
 static int
-decode_base64 (const char src[static 4])
+decode_b64 (const char src[static 4])
 {
   int val = 0;
   int i;
@@ -49,7 +49,7 @@ decode_base64 (const char src[static 4])
 }
 
 static void
-encode_base64 (char dest[static 4], const uint8_t src[static 3])
+encode_b64 (char dest[static 4], const uint8_t src[static 3])
 {
   const uint8_t input[] = {
     (src[0] >> 2) & 63,
@@ -75,17 +75,23 @@ encode_base64 (char dest[static 4], const uint8_t src[static 3])
 }
 
 size_t
-base64_encode (char *dest, const void *__restrict src, size_t len)
+b64_encode (char *dest, const void *__restrict src, size_t len)
 {
   const uint8_t *s = src;
   size_t i;
   uint8_t tmp[3] = { 0 };
 
+  if (len == 0)
+    {
+      dest[0] = '\0';
+      return 0;
+    }
+
   for (i = 0; i < len / 3; ++i)
-    encode_base64 (&dest[i * 4], &s[i * 3]);
+    encode_b64 (&dest[i * 4], &s[i * 3]);
 
   memcpy (tmp, &s[i * 3], len % 3);
-  encode_base64 (&dest[i * 4], tmp);
+  encode_b64 (&dest[i * 4], tmp);
   ++i;
   if (len % 3 == 1)
     {
@@ -101,7 +107,7 @@ base64_encode (char *dest, const void *__restrict src, size_t len)
 }
 
 size_t
-base64_decode (void *dest, const char *__restrict src, size_t len)
+b64_decode (void *dest, const char *__restrict src, size_t len)
 {
   size_t i;
   unsigned int val;
@@ -109,7 +115,7 @@ base64_decode (void *dest, const char *__restrict src, size_t len)
 
   for (i = 0; i < len / 4; ++i)
     {
-      val = decode_base64 (&src[i * 4]);
+      val = decode_b64 (&src[i * 4]);
       d[i * 3] = (val >> 16) & 0xff;
       d[i * 3 + 1] = (val >> 8) & 0xff;
       d[i * 3 + 2] = val & 0xff;
@@ -118,13 +124,13 @@ base64_decode (void *dest, const char *__restrict src, size_t len)
     {
       if (src[len - 2] == '=')
         {
-          val = decode_base64 (&src[len - 4]);
+          val = decode_b64 (&src[len - 4]);
           d[i * 3] = (val >> 16) & 0xff;
           d[i * 3 + 1] = (val >> 8) & 0xff;
         }
       else
         {
-          val = decode_base64 (&src[len - 4]);
+          val = decode_b64 (&src[len - 4]);
           d[i * 3] = (val >> 16) & 0xff;
         }
     }
