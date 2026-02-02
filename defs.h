@@ -1,4 +1,4 @@
-/* Copyright © 2024  Zhengyi Fu <i@fuzy.me> */
+/* Copyright © 2024, 2026  Zhengyi Fu <i@fuzy.me> */
 
 /* This program is free software: you can redistribute it and/or modify */
 /* it under the terms of the GNU General Public License as published by */
@@ -40,16 +40,6 @@
  */
 #define __aligned(x)                    __attribute__((__aligned__(x)))
 #define __aligned_largest               __attribute__((__aligned__))
-
-/*
- * Note: do not use this directly. Instead, use __alloc_size() since it is conditionally
- * available and includes other attributes. For GCC < 9.1, __alloc_size__ gets undefined
- * in compiler-gcc.h, due to misbehaviors.
- *
- *   gcc: https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-alloc_005fsize-function-attribute
- * clang: https://clang.llvm.org/docs/AttributeReference.html#alloc-size
- */
-#define __alloc_size__(x, ...)		__attribute__((__alloc_size__(x, ## __VA_ARGS__)))
 
 /*
  * Note: users of __always_inline currently do not write "inline" themselves,
