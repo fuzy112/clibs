@@ -17,6 +17,7 @@
 #define SCOPE_H
 
 #include "defs.h"
+#include <stdlib.h>
 
 /*
  * Scope-based resource management utilities
