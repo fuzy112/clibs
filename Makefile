@@ -65,7 +65,7 @@ targets := avltree-test rbtree-test \
            xarray-test \
 	   circbuf-test hashtable-test \
 	   b64-test url-test \
-	   fd-test
+	   fd-test scope-test scope-example scope-c11-test
 
 all: $(targets:%=%$(EXE))
 
@@ -94,6 +94,12 @@ b64-test$(EXE): b64-test.o b64.o
 url-test$(EXE): url-test.o encode_url.o
 
 fd-test$(EXE): fd-test.o
+
+scope-test$(EXE): scope-test.o
+
+scope-example$(EXE): scope-example.o
+
+scope-c11-test$(EXE): scope-c11-test.o
 
 xarray-fuzzer: xarray.o
 	$(LINK.c) -fsanitize=fuzzer -o $@ $^ $(LDLIBS)

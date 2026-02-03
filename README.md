@@ -14,3 +14,93 @@ Currently the following constructs are implemented:
 - linked list
 - lock file
 - radix tree (xarray)
+- scope-based resource management (scope.h)
+
+## Scope-based Resource Management
+
+The `scope.h` header provides scope-based resource management utilities inspired by the Linux kernel's implementation (see [LWN article](https://lwn.net/Articles/934679/)). These utilities use the `__attribute__((__cleanup__))` compiler extension to automatically clean up resources when they go out of scope.
+
+### Key Features
+
+1. **Automatic memory management** - Pointers can be automatically freed
+2. **Automatic locking** - Mutexes automatically unlocked
+3. **Automatic resource cleanup** - File descriptors, etc.
+4. **Error handling without goto** - Cleanup happens automatically on early returns
+
+### Basic Usage
+
+```c
+#include "scope.h"
+
+/* Define a mutex guard */
+DEFINE_GUARD(mutex, pthread_mutex_t *, pthread_mutex_lock(_T), pthread_mutex_unlock(_T))
+
+void example(void) {
+    /* Automatic memory management using freep */
+    char *buffer __cleanup(freep) = malloc(100);
+
+    /* Automatic mutex locking */
+    guard(mutex)(&my_mutex);
+
+    /* No manual cleanup needed! */
+}
+```
+
+### Convenience Headers
+
+For common use cases, `scope-guards.h` provides pre-defined guards:
+
+```c
+#include "scope-guards.h"
+
+/* Pre-defined guards for: */
+/* - pthread_mutex_t, pthread_rwlock_t, pthread_spinlock_t */
+/* - C11 mtx_t, cnd_t, thrd_t */
+/* - malloc/free, file descriptors, FILE* */
+
+void example(void) {
+    /* Using convenience macros */
+    AUTO_MUTEX(&mutex);           /* pthread mutex */
+    AUTO_MTX(&c11_mutex);         /* C11 mutex */
+    char *ptr __cleanup(freep) = malloc(100); /* Automatic free */
+    AUTO_FD("/dev/null", O_RDONLY);      /* Automatic close */
+}
+```
+
+### C11 Thread Support
+
+The library includes guards for C11 thread primitives:
+
+```c
+#include "scope-guards.h"
+#include <threads.h>
+
+mtx_t mutex;
+cnd_t cond;
+thrd_t thread;
+
+void example(void) {
+    /* C11 mutex with automatic unlock */
+    guard(mtx)(&mutex);
+
+    /* C11 condition variable guard */
+    guard(cnd)(&cond);
+
+    /* Thread join guard */
+    AUTO_JOIN_THREAD(thread);
+}
+```
+
+### Examples
+
+- `scope-test.c` - Comprehensive test suite (pthread)
+- `scope-example.c` - Simple usage examples
+- `scope-c11-test.c` - C11 thread primitives test
+
+### Building
+
+```bash
+make scope-test      # Build comprehensive pthread test
+make scope-example   # Build simple examples
+make scope-c11-test  # Build C11 thread primitives test
+```

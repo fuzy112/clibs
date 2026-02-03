@@ -72,7 +72,7 @@ TEST(close_nointr_already_closed)
   int fd = open("/dev/null", O_RDONLY);
   ASSERT(fd >= 0);
   ASSERT(close_nointr(fd) == 0);
-  
+
   /* Closing again should fail with EBADF */
   int result = close_nointr(fd);
   ASSERT(result < 0);
@@ -107,7 +107,7 @@ TEST(safe_close_preserves_errno)
 {
   int fd = open("/dev/null", O_RDONLY);
   ASSERT(fd >= 0);
-  
+
   errno = 42; /* Set a known errno */
   safe_close(fd);
   ASSERT(errno == 42); /* Should preserve errno */
@@ -137,7 +137,7 @@ TEST(auto_close_fd_scope)
     fd_copy = fd; /* Save for verification */
     /* fd should be automatically closed when leaving scope */
   }
-  
+
   /* Verify the FD was closed by trying to close it again */
   /* This should fail with EBADF if it was already closed */
   int result = close_nointr(fd_copy);
@@ -155,7 +155,7 @@ TEST(auto_close_fd_multiple)
   auto_close_fd fd1 = open("/dev/null", O_RDONLY);
   auto_close_fd fd2 = open("/dev/zero", O_RDONLY);
   auto_close_fd fd3 = open("/dev/null", O_WRONLY);
-  
+
   ASSERT(fd1 >= 0);
   ASSERT(fd2 >= 0);
   ASSERT(fd3 >= 0);
@@ -168,7 +168,7 @@ TEST(close_nointr_pipe)
 {
   int pipefd[2];
   ASSERT(pipe(pipefd) == 0);
-  
+
   ASSERT(close_nointr(pipefd[0]) == 0);
   ASSERT(close_nointr(pipefd[1]) == 0);
 }
@@ -177,7 +177,7 @@ TEST(safe_close_pipe)
 {
   int pipefd[2];
   ASSERT(pipe(pipefd) == 0);
-  
+
   ASSERT(safe_close(pipefd[0]) == -1);
   ASSERT(safe_close(pipefd[1]) == -1);
 }
@@ -197,12 +197,12 @@ TEST(fd_lifecycle)
   /* Test a typical FD lifecycle */
   int fd = open("/dev/null", O_RDWR);
   ASSERT(fd >= 0);
-  
+
   /* Write something */
   const char *msg = "test";
   ssize_t written = write(fd, msg, strlen(msg));
   ASSERT(written == (ssize_t)strlen(msg));
-  
+
   /* Close using safe_close */
   ASSERT(safe_close(fd) == -1);
 }
