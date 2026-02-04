@@ -15,45 +15,17 @@
  */
 
 #include "b64.h"
+#include "test.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-static int test_count = 0;
-static int pass_count = 0;
-
-#define TEST(name) static void test_##name (void)
-#define RUN_TEST(name)                                                        \
-  do                                                                          \
-    {                                                                         \
-      printf ("Running %s... ", #name);                                       \
-      test_count++;                                                           \
-      test_##name ();                                                         \
-      printf ("PASS\n");                                                      \
-      pass_count++;                                                           \
-    }                                                                         \
-  while (0)
-
-#define ASSERT(cond)                                                          \
-  do                                                                          \
-    {                                                                         \
-      if (!(cond))                                                            \
-        {                                                                     \
-          printf ("\n  ASSERTION FAILED: %s at line %d\n", #cond, __LINE__);  \
-          abort ();                                                           \
-        }                                                                     \
-    }                                                                         \
-  while (0)
 
 TEST (encode_empty)
 {
   char dest[10] = {0};
   size_t len = b64_encode (dest, "", 0);
-  fprintf(stderr, "DEBUG: Checking len assertion...\n");
   ASSERT (len == 0);
-  fprintf(stderr, "DEBUG: Checking dest[0] assertion...\n");
   ASSERT (dest[0] == '\0');
-  fprintf(stderr, "DEBUG: Both assertions passed\n");
 }
 
 TEST (encode_single_char)
@@ -224,7 +196,7 @@ TEST (long_string)
 int
 main (void)
 {
-  printf ("=== Base64 Encoding/Decoding Test Suite ===\n\n");
+  fprintf(stderr, "=== Base64 Encoding/Decoding Test Suite ===\n\n");
 
   RUN_TEST (encode_empty);
   RUN_TEST (encode_single_char);
@@ -243,8 +215,8 @@ main (void)
   RUN_TEST (padding_one_equals);
   RUN_TEST (long_string);
 
-  printf ("\n=== Results ===\n");
-  printf ("Passed: %d/%d\n", pass_count, test_count);
+  fprintf(stderr, "\n=== Results ===\n");
+  fprintf(stderr, "Passed: %d/%d\n", pass_count, test_count);
 
   return (pass_count == test_count) ? 0 : 1;
 }

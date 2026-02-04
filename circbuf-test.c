@@ -16,37 +16,12 @@
  */
 
 #include "circbuf.h"
+#include "test.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/uio.h>
-
-static int test_count = 0;
-static int pass_count = 0;
-
-#define TEST(name) static void test_##name (void)
-#define RUN_TEST(name)                                                        \
-  do                                                                          \
-    {                                                                         \
-      printf ("Running %s... ", #name);                                       \
-      test_count++;                                                           \
-      test_##name ();                                                         \
-      printf ("PASS\n");                                                      \
-      pass_count++;                                                           \
-    }                                                                         \
-  while (0)
-
-#define ASSERT(cond)                                                          \
-  do                                                                          \
-    {                                                                         \
-      if (!(cond))                                                            \
-        {                                                                     \
-          printf ("\n  ASSERTION FAILED: %s at line %d\n", #cond, __LINE__);  \
-          abort ();                                                           \
-        }                                                                     \
-    }                                                                         \
-  while (0)
 
 /* ========== TESTS ========== */
 
@@ -229,19 +204,20 @@ TEST (iov_prepare)
   unsigned nr_vecs;
   unsigned off = 0;
 
-  /* Empty buffer - should return 0 vectors */
+  /* Empty buffer - should return 1 vector of free space (size-1) */
   circ_prepare (buf, vec, &nr_vecs);
-  ASSERT (nr_vecs == 0);
+  ASSERT (nr_vecs == 1);
+  ASSERT (vec[0].iov_len == 63); /* size - 1 */
 
   /* Add some data */
   char data[20] = {0};
   ASSERT (circ_write (buf, data, 20, &off) == 0);
   circ_commit (buf, off);
 
-  /* Should return 1 vector for contiguous data */
+  /* Should return 1 vector for contiguous free space */
   circ_prepare (buf, vec, &nr_vecs);
   ASSERT (nr_vecs == 1);
-  ASSERT (vec[0].iov_len == 42); /* 63 - 20 - 1 = space left */
+  ASSERT (vec[0].iov_len == 43); /* 63 - 20 */
 
   circ_free (buf);
 }
@@ -410,7 +386,7 @@ TEST (stress_multiple_wraparounds)
 int
 main (void)
 {
-  printf ("=== Circular Buffer Comprehensive Test Suite ===\n\n");
+  fprintf(stderr, "=== Circular Buffer Comprehensive Test Suite ===\n\n");
 
   RUN_TEST (basic_create_destroy);
   RUN_TEST (invalid_size);
@@ -427,9 +403,8 @@ main (void)
   RUN_TEST (u32_operations);
   RUN_TEST (count_and_space);
   RUN_TEST (stress_multiple_wraparounds);
-
-  printf ("\n=== Results ===\n");
-  printf ("Passed: %d/%d\n", pass_count, test_count);
-
+  
+  fprintf(stderr, "\n=== Results ===\n");
+  fprintf(stderr, "Passed: %d/%d\n", pass_count, test_count);
   return (pass_count == test_count) ? 0 : 1;
 }

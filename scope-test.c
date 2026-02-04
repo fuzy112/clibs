@@ -26,17 +26,17 @@
 
 static void test_automatic_memory(void)
 {
-	printf("Test 1: Automatic memory management\n");
+	fprintf(stderr, "Test 1: Automatic memory management\n");
 
 	/* This pointer will be automatically freed when it goes out of scope */
 	char *buffer __cleanup(freep) = malloc(1024);
 	if (!buffer) {
-		printf("  Failed to allocate memory\n");
+		fprintf(stderr, "  Failed to allocate memory\n");
 		return;
 	}
 
 	strcpy(buffer, "Hello, scope-based memory management!");
-	printf("  Buffer contains: %s\n", buffer);
+	fprintf(stderr, "  Buffer contains: %s\n", buffer);
 
 	/* No need to call free() - it happens automatically */
 }
@@ -65,16 +65,16 @@ static char *create_greeting(const char *name)
 
 static void test_file_descriptor(void)
 {
-	printf("\nTest 2: File descriptor management\n");
+fprintf(stderr,"\nTest 2: File descriptor management\n");
 
 	/* File descriptor will be automatically closed when it goes out of scope */
 	CLASS(fd, file)("/dev/null", O_RDONLY);
 	if (file < 0) {
-		printf("  Failed to open /dev/null\n");
+fprintf(stderr,"  Failed to open /dev/null\n");
 		return;
 	}
 
-	printf("  File descriptor %d opened successfully\n", file);
+fprintf(stderr,"  File descriptor %d opened successfully\n", file);
 
 	/* No need to call close() - it happens automatically */
 }
@@ -88,28 +88,28 @@ static int shared_counter = 0;
 
 static void test_mutex_guard(void)
 {
-	printf("\nTest 3: Mutex locking with guard\n");
+fprintf(stderr,"\nTest 3: Mutex locking with guard\n");
 
 	/* Mutex will be automatically unlocked when guard goes out of scope */
 	guard(mutex)(&test_mutex);
 
 	shared_counter++;
-	printf("  Counter incremented to: %d\n", shared_counter);
+fprintf(stderr,"  Counter incremented to: %d\n", shared_counter);
 
 	/* No need to call pthread_mutex_unlock() - it happens automatically */
 }
 
 static void test_scoped_guard(void)
 {
-	printf("\nTest 3b: Mutex locking with scoped_guard\n");
+fprintf(stderr,"\nTest 3b: Mutex locking with scoped_guard\n");
 
 	/* Mutex will be automatically unlocked at the end of the scope */
 	scoped_guard(mutex, m, &test_mutex) {
 		shared_counter++;
-		printf("  Counter incremented inside scope: %d\n", shared_counter);
+fprintf(stderr,"  Counter incremented inside scope: %d\n", shared_counter);
 	}
 
-	printf("  Counter after scope: %d\n", shared_counter);
+fprintf(stderr,"  Counter after scope: %d\n", shared_counter);
 }
 
 static void *thread_func(void *arg __maybe_unused)
@@ -133,14 +133,14 @@ static void *thread_func_scoped(void *arg __maybe_unused)
 
 static void test_thread_safety(void)
 {
-	printf("\nTest 4: Thread safety with mutex guards\n");
+fprintf(stderr,"\nTest 4: Thread safety with mutex guards\n");
 
 	shared_counter = 0;
 	pthread_t threads[10];
 
 	for (int i = 0; i < 10; i++) {
 		if (pthread_create(&threads[i], NULL, thread_func, NULL) != 0) {
-			printf("  Failed to create thread %d\n", i);
+fprintf(stderr,"  Failed to create thread %d\n", i);
 			return;
 		}
 	}
@@ -149,19 +149,19 @@ static void test_thread_safety(void)
 		pthread_join(threads[i], NULL);
 	}
 
-	printf("  Final counter value: %d (expected: 10000)\n", shared_counter);
+fprintf(stderr,"  Final counter value: %d (expected: 10000)\n", shared_counter);
 }
 
 static void test_thread_safety_scoped(void)
 {
-	printf("\nTest 4b: Thread safety with scoped_guard\n");
+fprintf(stderr,"\nTest 4b: Thread safety with scoped_guard\n");
 
 	shared_counter = 0;
 	pthread_t threads[10];
 
 	for (int i = 0; i < 10; i++) {
 		if (pthread_create(&threads[i], NULL, thread_func_scoped, NULL) != 0) {
-			printf("  Failed to create thread %d\n", i);
+fprintf(stderr,"  Failed to create thread %d\n", i);
 			return;
 		}
 	}
@@ -170,7 +170,7 @@ static void test_thread_safety_scoped(void)
 		pthread_join(threads[i], NULL);
 	}
 
-	printf("  Final counter value: %d (expected: 10000)\n", shared_counter);
+fprintf(stderr,"  Final counter value: %d (expected: 10000)\n", shared_counter);
 }
 
 /*
@@ -220,18 +220,18 @@ static struct complex_resource *create_complex_resource(void)
 
 static void test_complex_resource(void)
 {
-	printf("\nTest 5: Complex resource management\n");
+fprintf(stderr,"\nTest 5: Complex resource management\n");
 
 	struct complex_resource *res = create_complex_resource();
 	if (!res) {
-		printf("  Failed to create complex resource\n");
+fprintf(stderr,"  Failed to create complex resource\n");
 		return;
 	}
 
 	/* Use the resource */
 	guard(mutex)(&res->lock);
 	strcpy(res->data, "Complex resource data");
-	printf("  Resource data: %s\n", res->data);
+fprintf(stderr,"  Resource data: %s\n", res->data);
 
 	/* Manually clean up since we took ownership */
 	cleanup_complex_resource(res);
@@ -256,7 +256,7 @@ static int process_with_resources(void)
 
 	/* Do some work */
 	strcpy(buffer, "Processing with automatic cleanup");
-	printf("  %s\n", buffer);
+fprintf(stderr,"  %s\n", buffer);
 
 	/* Success - buffer will be automatically freed,
 	 * file will be automatically closed,
@@ -266,22 +266,22 @@ static int process_with_resources(void)
 
 static void test_error_handling(void)
 {
-	printf("\nTest 6: Error handling without goto\n");
+fprintf(stderr,"\nTest 6: Error handling without goto\n");
 
 	int result = process_with_resources();
-	printf("  Result: %d\n", result);
+fprintf(stderr,"  Result: %d\n", result);
 }
 
 int main(void)
 {
-	printf("Scope-based locking utilities test\n");
-	printf("==================================\n");
+fprintf(stderr,"Scope-based locking utilities test\n");
+fprintf(stderr,"==================================\n");
 
 	test_automatic_memory();
 
 	char *greeting = create_greeting("World");
 	if (greeting) {
-		printf("  Created greeting: %s\n", greeting);
+fprintf(stderr,"  Created greeting: %s\n", greeting);
 		free(greeting);
 	}
 
@@ -293,6 +293,6 @@ int main(void)
 	test_complex_resource();
 	test_error_handling();
 
-	printf("\nAll tests completed successfully!\n");
+fprintf(stderr,"\nAll tests completed successfully!\n");
 	return 0;
 }

@@ -20,31 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int test_count = 0;
-static int pass_count = 0;
-
-#define TEST(name) static void test_##name (void)
-#define RUN_TEST(name)                                                        \
-  do                                                                          \
-    {                                                                         \
-      printf ("Running %s... ", #name);                                       \
-      test_count++;                                                           \
-      test_##name ();                                                         \
-      printf ("PASS\n");                                                      \
-      pass_count++;                                                           \
-    }                                                                         \
-  while (0)
-
-#define ASSERT(cond)                                                          \
-  do                                                                          \
-    {                                                                         \
-      if (!(cond))                                                            \
-        {                                                                     \
-          printf ("\n  ASSERTION FAILED: %s at line %d\n", #cond, __LINE__);  \
-          abort ();                                                           \
-        }                                                                     \
-    }                                                                         \
-  while (0)
+#include "test.h"
 
 TEST (encode_empty)
 {
@@ -195,7 +171,7 @@ TEST (encode_percent)
 int
 main (void)
 {
-  printf ("=== URL Encoding Test Suite ===\n\n");
+  fprintf(stderr, "=== URL Encoding Test Suite ===\n\n");
 
   RUN_TEST (encode_empty);
   RUN_TEST (encode_unreserved);
@@ -213,8 +189,8 @@ main (void)
   RUN_TEST (encode_plus);
   RUN_TEST (encode_percent);
 
-  printf ("\n=== Results ===\n");
-  printf ("Passed: %d/%d\n", pass_count, test_count);
+  fprintf(stderr, "\n=== Results ===\n");
+  fprintf(stderr, "Passed: %d/%d\n", pass_count, test_count);
 
   return (pass_count == test_count) ? 0 : 1;
 }

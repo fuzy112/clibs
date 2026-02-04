@@ -29,39 +29,7 @@ struct test_node
   struct avl_node node;
 };
 
-static int test_count = 0;
-static int pass_count = 0;
-
-#define TEST(name) static void test_##name (void)
-#define RUN_TEST(name)                                                        \
-  do                                                                          \
-    {                                                                         \
-      printf ("Running %s... ", #name);                                       \
-      test_count++;                                                           \
-      test_##name ();                                                         \
-      printf ("PASS\n");                                                      \
-      pass_count++;                                                           \
-    }                                                                         \
-  while (0)
-
-#define ASSERT(cond)                                                          \
-  do                                                                          \
-    {                                                                         \
-      if (!(cond))                                                            \
-        {                                                                     \
-          printf ("\n  ASSERTION FAILED: %s at line %d\n", #cond, __LINE__);  \
-          abort ();                                                           \
-        }                                                                     \
-    }                                                                         \
-  while (0)
-
-#define FAIL(msg)                                                             \
-  do                                                                          \
-    {                                                                         \
-      printf ("\n  FAILED: %s at line %d\n", msg, __LINE__);                  \
-      abort ();                                                               \
-    }                                                                         \
-  while (0)
+#include "test.h"
 
 /* Validation: Check AVL-tree properties */
 static int
@@ -588,7 +556,7 @@ TEST (alternating_insert_delete)
 int
 main (void)
 {
-  printf ("=== AVL Tree Comprehensive Test Suite ===\n\n");
+  fprintf(stderr, "=== AVL Tree Comprehensive Test Suite ===\n\n");
 
   RUN_TEST (empty_tree);
   RUN_TEST (single_node);
@@ -614,8 +582,8 @@ main (void)
   RUN_TEST (tree_balance);
   RUN_TEST (alternating_insert_delete);
 
-  printf ("\n=== Results ===\n");
-  printf ("Passed: %d/%d\n", pass_count, test_count);
+  fprintf(stderr, "\n=== Results ===\n");
+  fprintf(stderr, "Passed: %d/%d\n", pass_count, test_count);
 
   return (pass_count == test_count) ? 0 : 1;
 }

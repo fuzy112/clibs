@@ -29,31 +29,7 @@ struct test_item
   struct hlist_node node;
 };
 
-static int test_count = 0;
-static int pass_count = 0;
-
-#define TEST(name) static void test_##name (void)
-#define RUN_TEST(name)                                                        \
-  do                                                                          \
-    {                                                                         \
-      printf ("Running %s... ", #name);                                       \
-      test_count++;                                                           \
-      test_##name ();                                                         \
-      printf ("PASS\n");                                                      \
-      pass_count++;                                                           \
-    }                                                                         \
-  while (0)
-
-#define ASSERT(cond)                                                          \
-  do                                                                          \
-    {                                                                         \
-      if (!(cond))                                                            \
-        {                                                                     \
-          printf ("\n  ASSERTION FAILED: %s at line %d\n", #cond, __LINE__);  \
-          abort ();                                                           \
-        }                                                                     \
-    }                                                                         \
-  while (0)
+#include "test.h"
 
 /* ========== TESTS ========== */
 
@@ -305,11 +281,12 @@ TEST (possible_iteration)
 
   hash_init (table);
 
-  /* Insert multiple items with same key hash (keys 0, 256, 512...) */
+  /* Insert multiple items with same key hash (keys that actually collide to bucket 0) */
+  unsigned int colliding_keys[] = {0, 144, 377, 754, 987};
   for (int i = 0; i < 5; i++)
     {
       item = malloc (sizeof (*item));
-      item->key = i * 256; /* These will hash to same bucket */
+      item->key = colliding_keys[i]; /* These actually hash to same bucket */
       item->value = i;
       hash_add (table, item->key, &item->node);
     }
@@ -318,7 +295,7 @@ TEST (possible_iteration)
   for (int i = 0; i < 5; i++)
     {
       item = malloc (sizeof (*item));
-      item->key = i + 1;
+      item->key = i + 1000; /* Use keys unlikely to collide with bucket 0 */
       item->value = i + 100;
       hash_add (table, item->key, &item->node);
     }
@@ -331,7 +308,7 @@ TEST (possible_iteration)
       found[it->value] = 1;
   }
 
-  /* Should find items with values 0-4 (those with key 0, 256, 512...) */
+  /* Should find items with values 0-4 (those with colliding keys) */
   for (int i = 0; i < 5; i++)
     {
       ASSERT (found[i] == 1);
@@ -494,7 +471,7 @@ TEST (update_existing)
 int
 main (void)
 {
-  printf ("=== Hash Table Comprehensive Test Suite ===\n\n");
+  fprintf(stderr, "=== Hash Table Comprehensive Test Suite ===\n\n");
 
   RUN_TEST (basic_operations);
   RUN_TEST (collisions);
@@ -507,8 +484,8 @@ main (void)
   RUN_TEST (empty_table);
   RUN_TEST (update_existing);
 
-  printf ("\n=== Results ===\n");
-  printf ("Passed: %d/%d\n", pass_count, test_count);
+  fprintf(stderr, "\n=== Results ===\n");
+  fprintf(stderr, "Passed: %d/%d\n", pass_count, test_count);
 
   return (pass_count == test_count) ? 0 : 1;
 }

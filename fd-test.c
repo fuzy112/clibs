@@ -23,35 +23,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static int test_count = 0;
-static int pass_count = 0;
-
-#define TEST(name) static void test_##name(void)
-#define RUN_TEST(name)                                                        \
-  do                                                                          \
-    {                                                                         \
-      fprintf(stderr, "Running %s... ", #name);                               \
-      fflush(stderr);                                                         \
-      test_count++;                                                           \
-      test_##name();                                                          \
-      fprintf(stderr, "PASS\n");                                               \
-      pass_count++;                                                           \
-    }                                                                         \
-  while (0)
-
-#define ASSERT(cond)                                                          \
-  do                                                                          \
-    {                                                                         \
-      if (!(cond))                                                            \
-        {                                                                     \
-          fprintf(stderr, "\n  ASSERTION FAILED: %s at line %d\n", #cond,     \
-                  __LINE__);                                                  \
-          fflush(stdout);                                                     \
-          fflush(stderr);                                                     \
-          abort();                                                            \
-        }                                                                     \
-    }                                                                         \
-  while (0)
+#include "test.h"
 
 TEST(close_nointr_valid_fd)
 {

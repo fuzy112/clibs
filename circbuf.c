@@ -103,7 +103,6 @@ circ_alloc (unsigned size)
 {
   struct circbuf *circ;
 
-  assert ((size & (size - 1)) == 0);
   if (size == 0 || (size & (size - 1)) != 0)
     return errno = EINVAL, NULL;
 
@@ -152,7 +151,7 @@ circ_write (struct circbuf *circ, const void *__restrict buf, unsigned size,
 {
   unsigned tail = circ->tail + *off;
 
-  if (circ->size + circ->head - 1 - tail > size)
+  if (circ->size + circ->head - 1 - tail >= size)
     {
       unsigned space_to_end = circ_space_to_end (circ);
       memcpy (&circ->data[tail], buf,

@@ -78,7 +78,6 @@ size_t
 b64_encode (char *dest, const void *__restrict src, size_t len)
 {
   const uint8_t *s = src;
-  size_t i;
   uint8_t tmp[3] = { 0 };
 
   if (len == 0)
@@ -87,23 +86,30 @@ b64_encode (char *dest, const void *__restrict src, size_t len)
       return 0;
     }
 
-  for (i = 0; i < len / 3; ++i)
+  size_t full = len / 3;
+  size_t rem = len % 3;
+  size_t i;
+
+  for (i = 0; i < full; ++i)
     encode_b64 (&dest[i * 4], &s[i * 3]);
 
-  memcpy (tmp, &s[i * 3], len % 3);
-  encode_b64 (&dest[i * 4], tmp);
-  ++i;
-  if (len % 3 == 1)
+  if (rem > 0)
     {
-      dest[i * 4 - 2] = '=';
-      dest[i * 4 - 1] = '=';
+      memcpy (tmp, &s[full * 3], rem);
+      encode_b64 (&dest[full * 4], tmp);
+      if (rem == 1)
+        {
+          dest[full * 4 + 2] = '=';
+          dest[full * 4 + 3] = '=';
+        }
+      else if (rem == 2)
+        {
+          dest[full * 4 + 3] = '=';
+        }
     }
-  else if (len % 3 == 2)
-    {
-      dest[i * 4 - 1] = '=';
-    }
-  dest[i * 4] = '\0';
-  return i * 4;
+
+  dest[full * 4 + (rem > 0 ? 4 : 0)] = '\0';
+  return full * 4 + (rem > 0 ? 4 : 0);
 }
 
 size_t
@@ -113,26 +119,51 @@ b64_decode (void *dest, const char *__restrict src, size_t len)
   unsigned int val;
   uint8_t *d = dest;
 
-  for (i = 0; i < len / 4; ++i)
+  /* Handle empty input */
+  if (len == 0)
+    return 0;
+
+  /* Calculate number of complete 4-byte chunks */
+  size_t chunks = len / 4;
+  if (chunks == 0)
+    return 0;
+
+  /* Process all but the last chunk */
+  for (i = 0; i < chunks - 1; ++i)
     {
       val = decode_b64 (&src[i * 4]);
       d[i * 3] = (val >> 16) & 0xff;
       d[i * 3 + 1] = (val >> 8) & 0xff;
       d[i * 3 + 2] = val & 0xff;
     }
+
+  /* Handle the last chunk (may have padding) */
+  size_t last_chunk_idx = chunks - 1;
+  val = decode_b64 (&src[last_chunk_idx * 4]);
+
+  /* Check for padding */
   if (src[len - 1] == '=')
     {
       if (src[len - 2] == '=')
-        {
-          val = decode_b64 (&src[len - 4]);
-          d[i * 3] = (val >> 16) & 0xff;
-          d[i * 3 + 1] = (val >> 8) & 0xff;
-        }
+	{
+	  /* Two padding chars: 1 output byte */
+	  d[last_chunk_idx * 3] = (val >> 16) & 0xff;
+	  return last_chunk_idx * 3 + 1;
+	}
       else
-        {
-          val = decode_b64 (&src[len - 4]);
-          d[i * 3] = (val >> 16) & 0xff;
-        }
+	{
+	  /* One padding char: 2 output bytes */
+	  d[last_chunk_idx * 3] = (val >> 16) & 0xff;
+	  d[last_chunk_idx * 3 + 1] = (val >> 8) & 0xff;
+	  return last_chunk_idx * 3 + 2;
+	}
     }
-  return i * 3;
+  else
+    {
+      /* No padding: 3 output bytes */
+      d[last_chunk_idx * 3] = (val >> 16) & 0xff;
+      d[last_chunk_idx * 3 + 1] = (val >> 8) & 0xff;
+      d[last_chunk_idx * 3 + 2] = val & 0xff;
+      return last_chunk_idx * 3 + 3;
+    }
 }
