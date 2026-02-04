@@ -99,11 +99,34 @@ static void test_mutex_guard(void)
 	/* No need to call pthread_mutex_unlock() - it happens automatically */
 }
 
+static void test_scoped_guard(void)
+{
+	printf("\nTest 3b: Mutex locking with scoped_guard\n");
+
+	/* Mutex will be automatically unlocked at the end of the scope */
+	scoped_guard(mutex, m, &test_mutex) {
+		shared_counter++;
+		printf("  Counter incremented inside scope: %d\n", shared_counter);
+	}
+
+	printf("  Counter after scope: %d\n", shared_counter);
+}
+
 static void *thread_func(void *arg __maybe_unused)
 {
 	for (int i = 0; i < 1000; i++) {
 		guard(mutex)(&test_mutex);
 		shared_counter++;
+	}
+	return NULL;
+}
+
+static void *thread_func_scoped(void *arg __maybe_unused)
+{
+	for (int i = 0; i < 1000; i++) {
+		scoped_guard(mutex, m, &test_mutex) {
+			shared_counter++;
+		}
 	}
 	return NULL;
 }
@@ -117,6 +140,27 @@ static void test_thread_safety(void)
 
 	for (int i = 0; i < 10; i++) {
 		if (pthread_create(&threads[i], NULL, thread_func, NULL) != 0) {
+			printf("  Failed to create thread %d\n", i);
+			return;
+		}
+	}
+
+	for (int i = 0; i < 10; i++) {
+		pthread_join(threads[i], NULL);
+	}
+
+	printf("  Final counter value: %d (expected: 10000)\n", shared_counter);
+}
+
+static void test_thread_safety_scoped(void)
+{
+	printf("\nTest 4b: Thread safety with scoped_guard\n");
+
+	shared_counter = 0;
+	pthread_t threads[10];
+
+	for (int i = 0; i < 10; i++) {
+		if (pthread_create(&threads[i], NULL, thread_func_scoped, NULL) != 0) {
 			printf("  Failed to create thread %d\n", i);
 			return;
 		}
@@ -243,7 +287,9 @@ int main(void)
 
 	test_file_descriptor();
 	test_mutex_guard();
+	test_scoped_guard();
 	test_thread_safety();
+	test_thread_safety_scoped();
 	test_complex_resource();
 	test_error_handling();
 

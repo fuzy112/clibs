@@ -173,4 +173,33 @@ static inline void freep(void *p)
 #define guard(name)							\
 	CLASS(name, __UNIQUE_ID(guard))
 
+/*
+ * scoped_guard() - Create a scoped guard
+ *
+ * @name:   Guard class name defined with DEFINE_GUARD or DEFINE_CLASS
+ * @var:    Name for the guard variable within the scope
+ * @...:    Arguments to pass to the guard constructor
+ *
+ * Creates a scope where the resource is managed. The resource is acquired
+ * at the beginning of the scope and automatically released at the end.
+ * The guard variable is accessible by the given name within the scope.
+ *
+ * Examples:
+ *   // For mutex guards (DEFINE_GUARD)
+ *   scoped_guard(mutex, m, &mutex) {
+ *       // Critical section - mutex is locked, accessible as 'm'
+ *   }
+ *
+ *   // For file descriptors (DEFINE_CLASS)
+ *   scoped_guard(fd, f, "/dev/null", O_RDONLY) {
+ *       if (f >= 0) {  // f is the file descriptor
+ *           // Use file descriptor
+ *       }
+ *   }
+ */
+#define scoped_guard(name, var, ...)				\
+	for (class_##name##_t var __cleanup(class_##name##_destructor) = \
+	     class_##name##_constructor(__VA_ARGS__), \
+	     *__##var##_ptr = &var; __##var##_ptr; __##var##_ptr = NULL)
+
 #endif /* !SCOPE_H */

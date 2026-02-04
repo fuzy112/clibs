@@ -71,6 +71,13 @@ static void example_locking(void)
 		/* Mutex automatically unlocked here */
 	}
 
+	/* Method 3: Using scoped_guard() */
+	scoped_guard(mutex, m, &global_mutex) {
+		printf("  Method 3: Using scoped_guard() - mutex is locked\n");
+		printf("  Doing some work...\n");
+		/* Mutex automatically unlocked at end of scope */
+	}
+
 	/* No need to call pthread_mutex_unlock() - it happens automatically! */
 }
 
