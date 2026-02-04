@@ -26,6 +26,7 @@ The `scope.h` header provides scope-based resource management utilities inspired
 2. **Automatic locking** - Mutexes automatically unlocked
 3. **Automatic resource cleanup** - File descriptors, etc.
 4. **Error handling without goto** - Cleanup happens automatically on early returns
+5. **Scoped resource management** - Explicit scope-based guards with `scoped_guard()`
 
 ### Basic Usage
 
@@ -45,6 +46,41 @@ void example(void) {
     /* No manual cleanup needed! */
 }
 ```
+
+### Scoped Guards
+
+For more explicit scope-based resource management, `scope.h` provides the `scoped_guard()` macro. Unlike `guard()` which acquires a resource for the entire function scope, `scoped_guard()` creates a named variable and restricts the resource lifetime to a specific block.
+
+```c
+#include "scope.h"
+
+/* Define a file descriptor guard */
+DEFINE_GUARD(fd, int, (_T = open(__VA_ARGS__)), close(_T))
+
+void example(void) {
+    /* Scoped file descriptor - automatically closed at block exit */
+    scoped_guard(fd, f, "/dev/null", O_RDONLY) {
+        if (f >= 0) {
+            /* Use file descriptor 'f' within this scope */
+            read(f, buffer, sizeof(buffer));
+        }
+    }
+    /* File descriptor is automatically closed here */
+
+    /* Multiple scoped guards can be nested */
+    scoped_guard(mutex, m, &mutex) {
+        /* Critical section - mutex locked */
+        counter++;
+    }
+    /* Mutex automatically unlocked here */
+}
+```
+
+Key benefits of `scoped_guard()`:
+- **Explicit scope boundaries** - Resource lifetime matches lexical scope
+- **Named variables** - Access resource via user-defined variable name
+- **Thread safety** - Works correctly in multi-threaded environments
+- **Variadic constructors** - Supports guards requiring multiple constructor arguments
 
 ### Convenience Headers
 
@@ -93,7 +129,7 @@ void example(void) {
 
 ### Examples
 
-- `scope-test.c` - Comprehensive test suite (pthread)
+- `scope-test.c` - Comprehensive test suite (pthread) including `scoped_guard()` tests
 - `scope-example.c` - Simple usage examples
 - `scope-c11-test.c` - C11 thread primitives test
 

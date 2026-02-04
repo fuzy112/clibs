@@ -9,4 +9,9 @@
 *.diff
 *.reject
 *.tmp
+*-test
+*-example
+avl2dot
+rb2dot
+genrnd
 .vscode/
